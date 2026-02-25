@@ -145,9 +145,56 @@ body.dark .pref-box {
     background: #353535;
     border: 1px solid #555;
 }
+/* TEXT SIZE */
+body.normal {
+    font-size: 16px;
+}
+
+body.grand {
+    font-size: 20px;
+}
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 350px;
+    text-align: center;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.btn-confirm {
+    background: #2e7d32;
+    color: white;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    background: #ccc;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
     </style>
 </head>
-<body class="<?= $_SESSION['theme'] ?? 'light' ?>">
+<body class="<?= $_SESSION['theme'] ?? 'light' ?> <?= $_SESSION['taille'] ?? 'normal' ?>">
 
 <div class="sidebar">
 
@@ -155,28 +202,28 @@ body.dark .pref-box {
         <strong>CM2E</strong>
     </div>
 
-    <div class="profile">
-        <img src="../uploads/default.png" alt="Profile">
-        <h4><?= htmlspecialchars($_SESSION['user_prenom'] . " " . $_SESSION['user_nom']); ?></h4>
-        <small>Métrologue industriel</small>
-    </div>
+<div class="profile">
+    <img src="../uploads/default.png" alt="Profile">
+    <h4><?= htmlspecialchars($_SESSION['user_prenom'] . " " . $_SESSION['user_nom']); ?></h4>
+    <small><?= $lang['job_title'] ?></small>
+</div>
 
-    <div class="menu">
-        <a href="?page=tableau_bord">Tableau de bord</a>
-        <a href="?page=calendrier_performance">Calendrier de performance</a>
-        <a href="?page=projets">Projets</a>
-        <a href="?page=projet_courant">Projet courant</a>
-        <a href="?page=parametres">Paramètres</a>
-    </div>
+<div class="menu">
+    <a href="?page=tableau_bord"><?= $lang['dashboard'] ?></a>
+    <a href="?page=calendrier_performance"><?= $lang['performance_calendar'] ?></a>
+    <a href="?page=projets"><?= $lang['projects'] ?></a>
+    <a href="?page=projet_courant"><?= $lang['current_project'] ?></a>
+    <a href="?page=parametres"><?= $lang['settings'] ?></a>
+</div>
 
-    <div class="logout">
-        <a href="../auth/logout.php">Déconnexion</a>
-    </div>
+<div class="logout">
+    <a href="../auth/logout.php"><?= $lang['logout'] ?></a>
+</div>
 
 </div>
 
 <div class="content">
-    <h2>Bienvenue <?= htmlspecialchars($_SESSION['user_prenom']) ?></h2>
+    <h2><?= $lang['welcome'] ?> <?= htmlspecialchars($_SESSION['user_prenom']) ?></h2>
 
     <?php
     // Inclusion de la page AU BON ENDROIT

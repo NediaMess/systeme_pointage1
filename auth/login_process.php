@@ -22,6 +22,9 @@ if($user && password_verify($password, $user['mot_de_passe'])){
     $_SESSION['role'] = $user['role'];
     $_SESSION['user_nom'] = $user['nom'];
     $_SESSION['user_prenom'] = $user['prenom'];
+    // Enregistrer la dernière connexion
+    $stmt2 = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+$stmt2->execute([$user['id']]);
 
     header("Location: ../dashboard/index.php");
     exit();

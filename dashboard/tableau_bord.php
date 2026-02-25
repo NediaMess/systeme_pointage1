@@ -7,7 +7,6 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: ../login.php");
     exit();
 }
-
 $user_id = $_SESSION['user_id'];
 
 
@@ -110,36 +109,42 @@ $pourcentage_solo = $total > 0 ? round(($solo/$total)*100) : 0;
 $pourcentage_equipe = $total > 0 ? round(($equipe/$total)*100) : 0;
 ?>
 
-<h2>Tableau de bord</h2>
+<h2><?= $lang['dashboard'] ?></h2>
 
-<p><strong>Score trimestriel :</strong> <?= $score_trimestre ?> pts</p>
+<p>
+    <strong><?= $lang['score_trimester'] ?> :</strong>
+    <?= $score_trimestre ?> <?= $lang['points'] ?>
+</p>
 
-<p><strong>Projets réalisés (3 derniers mois) :</strong></p>
+<p>
+    <strong><?= $lang['projects_last_3_months'] ?> :</strong>
+</p>
 
 <?php foreach($projets_mois as $mois => $total): ?>
     <p><?= $mois_noms[$mois] ?> : <?= $total ?></p>
 <?php endforeach; ?>
 
 <div class="card-projet-actuel">
-    <h3>Projet actuel</h3>
+    <h3><?= $lang['current_project'] ?></h3>
 
     <?php if($projet_actuel): ?>
         <p><strong><?= htmlspecialchars($projet_actuel['nom_projet']) ?></strong></p>
-        <p style="color:orange;">En cours</p>
+        <p style="color:orange;"><?= $lang['in_progress'] ?></p>
     <?php else: ?>
-        <p>Aucun projet en cours</p>
+        <p><?= $lang['no_project'] ?></p>
     <?php endif; ?>
 </div>
 
 <div class="card-mode-travail">
-    <h3>Mode de travail</h3>
+    <h3><?= $lang['work_mode'] ?></h3>
 
     <div style="display:flex; justify-content:space-between;">
-        <span>Solo</span>
+        <span><?= $lang['solo'] ?></span>
         <span><?= $pourcentage_solo ?>%</span>
     </div>
 
     <div style="display:flex; justify-content:space-between;">
-        <span>Équipe</span>
+        <span><?= $lang['team'] ?></span>
         <span><?= $pourcentage_equipe ?>%</span>
     </div>
+</div>

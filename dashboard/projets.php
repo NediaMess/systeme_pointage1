@@ -1,6 +1,7 @@
 <?php
 require_once "../lang_init.php";
 require_once "../config/database.php";
+
 $user_id = $_SESSION['user_id'];
 
 /* =============================
@@ -43,11 +44,7 @@ $stmt->execute($params);
 $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<h2>Historique des projets</h2>
-
-<!-- =============================
-     TOOLBAR
-============================= -->
+<h2><?= $lang['project_history'] ?></h2>
 
 <div class="table-header">
 
@@ -55,7 +52,7 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <form method="GET" class="search-box">
         <input type="hidden" name="page" value="projets">
         <input type="text" name="search"
-               placeholder="Rechercher..."
+               placeholder="<?= $lang['search'] ?>"
                value="<?= htmlspecialchars($search) ?>">
     </form>
 
@@ -65,10 +62,15 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <form method="GET">
             <input type="hidden" name="page" value="projets">
             <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>">
+
             <select name="mode" onchange="this.form.submit()" class="filter-select">
-                <option value="">Mode de travail</option>
-                <option value="solo" <?= $mode=='solo'?'selected':'' ?>>Solo</option>
-                <option value="equipe" <?= $mode=='equipe'?'selected':'' ?>>Equipe</option>
+                <option value=""><?= $lang['work_mode'] ?></option>
+                <option value="solo" <?= $mode=='solo'?'selected':'' ?>>
+                    <?= $lang['solo'] ?>
+                </option>
+                <option value="equipe" <?= $mode=='equipe'?'selected':'' ?>>
+                    <?= $lang['team'] ?>
+                </option>
             </select>
         </form>
 
@@ -79,13 +81,23 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <input type="hidden" name="mode" value="<?= htmlspecialchars($mode) ?>">
 
             <select name="sort" onchange="this.form.submit()" class="filter-select">
-                <option value="nom_projet" <?= $sort=='nom_projet'?'selected':'' ?>>Nom</option>
-                <option value="date_creation" <?= $sort=='date_creation'?'selected':'' ?>>Date</option>
+                <option value="nom_projet" <?= $sort=='nom_projet'?'selected':'' ?>>
+                    <?= $lang['project_name'] ?>
+                </option>
+
+                <option value="date_creation" <?= $sort=='date_creation'?'selected':'' ?>>
+                    <?= $lang['creation_date'] ?>
+                </option>
             </select>
 
             <select name="order" onchange="this.form.submit()" class="filter-select">
-                <option value="asc" <?= $order=='ASC'?'selected':'' ?>>↑ Asc</option>
-                <option value="desc" <?= $order=='DESC'?'selected':'' ?>>↓ Desc</option>
+                <option value="asc" <?= $order=='ASC'?'selected':'' ?>>
+                    ↑ <?= $lang['ascending'] ?>
+                </option>
+
+                <option value="desc" <?= $order=='DESC'?'selected':'' ?>>
+                    ↓ <?= $lang['descending'] ?>
+                </option>
             </select>
         </form>
 
@@ -96,20 +108,16 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 </div>
 
-<!-- =============================
-     TABLE
-============================= -->
-
 <table class="projects-table">
     <thead>
         <tr>
             <th>ID</th>
-            <th>Nom Projet</th>
-            <th>Mode</th>
-            <th>Date création</th>
-            <th>Score ajouté</th>
-            <th>Statut</th>
-            <th>Date fin</th>
+            <th><?= $lang['project_name'] ?></th>
+            <th><?= $lang['work_mode'] ?></th>
+            <th><?= $lang['creation_date'] ?></th>
+            <th><?= $lang['score_added'] ?></th>
+            <th><?= $lang['status'] ?></th>
+            <th><?= $lang['end_date'] ?></th>
         </tr>
     </thead>
 
@@ -118,141 +126,60 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php foreach($projects as $project): ?>
             <tr>
                 <td><?= $project['id']; ?></td>
+
                 <td><?= htmlspecialchars($project['nom_projet']); ?></td>
-                <td><?= htmlspecialchars($project['mode_travail']); ?></td>
+
+                <td>
+                    <?= $project['mode_travail'] == 'solo' 
+                        ? $lang['solo'] 
+                        : $lang['team'] ?>
+                </td>
+
                 <td><?= date('d/m/Y', strtotime($project['date_creation'])); ?></td>
 
                 <!-- SCORE -->
                 <td>
-                  <?php
-                     $score = $project['score_total'];
+                    <?php
+                        $score = $project['score_total'];
 
-                if($score > 0){
-                     echo "<span class='score positive'>+$score</span>";
-                } elseif($score < 0){
-                     echo "<span class='score negative'>$score</span>";
-                } else {
-                     echo "0";
-           }
-        ?>
-    </td>
+                        if($score > 0){
+                            echo "<span class='score positive'>+$score</span>";
+                        } elseif($score < 0){
+                            echo "<span class='score negative'>$score</span>";
+                        } else {
+                            echo "0";
+                        }
+                    ?>
+                </td>
 
-     <td>
-<?php
-    $today = date('Y-m-d');
+                <!-- STATUS -->
+                <td>
+                    <?php
+                        $today = date('Y-m-d');
 
-    if(!empty($project['date_fin']) && $project['date_fin'] < $today){
-        echo '<span style="background-color: green; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">Terminé</span>';
-    } else {
-        echo '<span style="background-color: orange; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">En cours</span>';
-    }
-?>
-</td>
+                        if(!empty($project['date_fin']) && $project['date_fin'] < $today){
+                            echo '<span style="background-color: green; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">'
+                                 . $lang['completed'] .
+                                 '</span>';
+                        } else {
+                            echo '<span style="background-color: orange; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">'
+                                 . $lang['in_progress'] .
+                                 '</span>';
+                        }
+                    ?>
+                </td>
 
                 <td>
-                    <?= $project['date_fin'] ? date('d/m/Y', strtotime($project['date_fin'])) : '-' ?>
+                    <?= $project['date_fin'] 
+                        ? date('d/m/Y', strtotime($project['date_fin'])) 
+                        : '-' ?>
                 </td>
             </tr>
         <?php endforeach; ?>
     <?php else: ?>
         <tr>
-            <td colspan="7">Aucun projet trouvé</td>
+            <td colspan="7"><?= $lang['no_project_found'] ?></td>
         </tr>
     <?php endif; ?>
     </tbody>
 </table>
-
-<style>
-
-/* TOOLBAR */
-.table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.search-box input {
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid #d1d5db;
-    width: 250px;
-    background: #f9fafb;
-}
-
-.table-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.filter-select {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    background: #f9fafb;
-}
-
-.icon-btn {
-    background: #e5e7eb;
-    padding: 6px 10px;
-    border-radius: 6px;
-    text-decoration: none;
-    color: black;
-}
-
-.icon-btn:hover {
-    background: #d1d5db;
-}
-
-/* TABLE */
-.projects-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #f3f4f6;
-}
-
-.projects-table th {
-    background: #e5e7eb;
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #d1d5db;
-}
-
-.projects-table td {
-    padding: 12px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.projects-table tr:hover {
-    background: #eaeaea;
-}
-
-/* SCORE COLORS */
-.score.positive {
-    color: green;
-    font-weight: bold;
-}
-
-.score.negative {
-    color: red;
-    font-weight: bold;
-}
-
-/* BADGE */
-.badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-}
-
-.badge.active {
-    background: #4CAF50;
-    color: white;
-}
-
-.badge.finished {
-    background: #999;
-    color: white;
-}
-
-</style>

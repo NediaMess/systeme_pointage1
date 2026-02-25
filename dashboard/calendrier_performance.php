@@ -2,6 +2,9 @@
 require_once "../lang_init.php";
 require_once "../config/database.php";
 $user_id = $_SESSION['user_id'];
+$calendar_view = $_SESSION['calendar_view'] ?? 'trimester';
+$first_day = $_SESSION['first_day'] ?? 'monday';
+
 
 /* ===============================
    GESTION MOIS / ANNEE
@@ -21,29 +24,55 @@ if(isset($_GET['date_select']) && !empty($_GET['date_select'])){
 $trimestre = ceil($mois_courant / 3);
 $premier_mois_trimestre = ($trimestre - 1) * 3 + 1;
 
-/* Générer les 3 mois */
+/* Génération des mois selon vue */
+
 $mois = [];
-for ($i = 0; $i < 3; $i++) {
-    $mois[] = [
-        'mois' => $premier_mois_trimestre + $i,
-        'annee' => $annee
-    ];
+
+if($calendar_view == 'trimester'){
+
+    for ($i = 0; $i < 3; $i++) {
+        $mois[] = [
+            'mois' => $premier_mois_trimestre + $i,
+            'annee' => $annee
+        ];
+    }
+
+} else { // vue annuelle
+
+    for ($m = 1; $m <= 12; $m++) {
+        $mois[] = [
+            'mois' => $m,
+            'annee' => $annee
+        ];
+    }
 }
+/* ===============================
+   NAVIGATION
+=================================*/
 
-/* Navigation */
-$mois_precedent = $premier_mois_trimestre - 3;
-$mois_suivant = $premier_mois_trimestre + 3;
-$annee_precedente = $annee;
-$annee_suivante = $annee;
+if($calendar_view == 'trimester'){
 
-if ($mois_precedent < 1) {
-    $mois_precedent += 12;
-    $annee_precedente--;
-}
+    $mois_precedent = $premier_mois_trimestre - 3;
+    $mois_suivant = $premier_mois_trimestre + 3;
+    $annee_precedente = $annee;
+    $annee_suivante = $annee;
 
-if ($mois_suivant > 12) {
-    $mois_suivant -= 12;
-    $annee_suivante++;
+    if ($mois_precedent < 1) {
+        $mois_precedent += 12;
+        $annee_precedente--;
+    }
+
+    if ($mois_suivant > 12) {
+        $mois_suivant -= 12;
+        $annee_suivante++;
+    }
+
+} else {
+
+    $mois_precedent = $mois_courant;
+    $mois_suivant = $mois_courant;
+    $annee_precedente = $annee - 1;
+    $annee_suivante = $annee + 1;
 }
 
 /* ===============================
@@ -64,7 +93,16 @@ foreach ($scores as $s) {
 }
 
 $today = date('Y-m-d');
+$stmt = $pdo->prepare("
+    SELECT date_off 
+    FROM non_working_days 
+    WHERE user_id = ?
+");
+$stmt->execute([$user_id]);
+
+$off_days_db = $stmt->fetchAll(PDO::FETCH_COLUMN);
 ?>
+
 
 <!-- ===============================
      FLATPICKR (Mini Calendrier)
@@ -161,6 +199,19 @@ td {
     color: white;
     margin: 3px auto;
 }
+.year-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+.day-off {
+    background-color: #ffebee;
+}
+
+.day-off .day-number {
+    color: red;
+    font-weight: bold;
+}
 
 .score-green { background-color: #4CAF50; }
 .score-red { background-color: #f44336; }
@@ -176,15 +227,24 @@ td {
 
     <a href="?page=calendrier_performance&mois=<?= $mois_precedent ?>&annee=<?= $annee_precedente ?>">←</a>
 
-    <strong>
-        <?= date('M', mktime(0,0,0,$mois[0]['mois'],1,$mois[0]['annee'])) ?>
-        -
-        <?= date('M', mktime(0,0,0,$mois[1]['mois'],1,$mois[1]['annee'])) ?>
-        -
-        <?= date('M', mktime(0,0,0,$mois[2]['mois'],1,$mois[2]['annee'])) ?>
-        <?= $annee ?>
-    </strong>
+  <strong>
 
+<?php if($calendar_view == 'trimester'): ?>
+
+    <?= date('M', mktime(0,0,0,$mois[0]['mois'],1,$mois[0]['annee'])) ?>
+    -
+    <?= date('M', mktime(0,0,0,$mois[1]['mois'],1,$mois[1]['annee'])) ?>
+    -
+    <?= date('M', mktime(0,0,0,$mois[2]['mois'],1,$mois[2]['annee'])) ?>
+    <?= $annee ?>
+
+<?php else: ?>
+
+    <?= $annee ?>
+
+<?php endif; ?>
+
+</strong>
     <a href="?page=calendrier_performance&mois=<?= $mois_suivant ?>&annee=<?= $annee_suivante ?>">→</a>
 
     <!-- Bouton mini calendrier -->
@@ -200,7 +260,7 @@ td {
      CALENDRIERS
 =================================-->
 
-<div class="calendrier-container">
+<div class="<?= $calendar_view == 'year' ? 'year-grid' : 'calendrier-container' ?>">
 
 <?php foreach($mois as $item):
 
@@ -217,13 +277,27 @@ td {
 
 <table>
 <tr>
-<th>L</th><th>M</th><th>M</th><th>J</th>
-<th>V</th><th>S</th><th>D</th>
+<?php if($first_day == 'monday'): ?>
+    <th>L</th><th>M</th><th>M</th><th>J</th>
+    <th>V</th><th>S</th><th>D</th>
+<?php else: ?>
+    <th>D</th><th>L</th><th>M</th><th>M</th>
+    <th>J</th><th>V</th><th>S</th>
+<?php endif; ?>
 </tr>
 <tr>
 
 <?php
-$jour_semaine = date('N', $premier_jour);
+if($first_day == 'monday'){
+    $jour_semaine = date('N', $premier_jour);
+} else {
+    $jour_semaine = date('w', $premier_jour);
+    if($jour_semaine == 0){
+        $jour_semaine = 1;
+    } else {
+        $jour_semaine++;
+    }
+}
 
 for($i=1; $i<$jour_semaine; $i++){
     echo "<td></td>";
@@ -235,7 +309,8 @@ for($jour=1; $jour<=$nb_jours; $jour++){
         str_pad($m,2,"0",STR_PAD_LEFT) . "-" .
         str_pad($jour,2,"0",STR_PAD_LEFT);
 
-    echo "<td>";
+    $class_off = in_array($date_complete, $off_days_db) ? "day-off" : "";
+echo "<td class='$class_off'>";
     echo "<div class='day-number'>$jour</div>";
 
     if($date_complete == $today){
@@ -250,7 +325,7 @@ for($jour=1; $jour<=$nb_jours; $jour++){
 
     echo "</td>";
 
-    if(($jour + $jour_semaine -1) % 7 == 0){
+    if((($jour + $jour_semaine -1) % 7) == 0){
         echo "</tr><tr>";
     }
 }

@@ -2,7 +2,7 @@
 require_once "../lang_init.php";
 ?>
 
-<h2><?= $translations['settings'] ?></h2>
+<h2><?= $lang['settings'] ?></h2>
 
 
 <div class="settings-container">

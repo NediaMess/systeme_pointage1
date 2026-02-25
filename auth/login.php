@@ -1,35 +1,43 @@
 <?php
+if(session_status() === PHP_SESSION_NONE){
+    session_start();
+}
+
 require_once "../lang_init.php";
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="<?= htmlspecialchars($_SESSION['lang'] ?? 'fr') ?>">
 <head>
     <meta charset="UTF-8">
-    <title><?= $translations['login'] ?></title>
+    <title><?= htmlspecialchars($lang['login']) ?></title>
 </head>
 <body>
 
-<h2><?= $translations['login'] ?></h2>
+<h2><?= htmlspecialchars($lang['login']) ?></h2>
 
 <form action="login_process.php" method="POST">
 
-    <input type="email"
-           name="email"
-           placeholder="<?= $translations['email'] ?>"
-           required>
+    <div>
+        <label><?= htmlspecialchars($lang['email']) ?> :</label><br>
+        <input type="email"
+               name="email"
+               required>
+    </div>
 
-    <br><br>
+    <br>
 
-    <input type="password"
-           name="password"
-           placeholder="<?= $translations['password'] ?>"
-           required>
+    <div>
+        <label><?= htmlspecialchars($lang['password']) ?> :</label><br>
+        <input type="password"
+               name="password"
+               required>
+    </div>
 
-    <br><br>
+    <br>
 
     <button type="submit">
-        <?= $translations['login_button'] ?>
+        <?= htmlspecialchars($lang['login_button']) ?>
     </button>
 
 </form>
@@ -37,15 +45,20 @@ require_once "../lang_init.php";
 <br>
 
 <a href="forgot_password.php">
-    <?= $translations['forgot_password'] ?>
+    <?= htmlspecialchars($lang['forgot_password']) ?>
+</a>
+<br><br>
+
+<a href="register.php">
+    Créer un compte
 </a>
 
-<?php
-if(isset($_SESSION['error'])){
-    echo "<p style='color:red'>" . htmlspecialchars($_SESSION['error']) . "</p>";
-    unset($_SESSION['error']);
-}
-?>
+<?php if(isset($_SESSION['error'])): ?>
+    <p style="color:red;">
+        <?= htmlspecialchars($_SESSION['error']) ?>
+    </p>
+    <?php unset($_SESSION['error']); ?>
+<?php endif; ?>
 
 </body>
 </html>
