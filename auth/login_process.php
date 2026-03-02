@@ -1,6 +1,8 @@
 <?php
 require_once "../lang_init.php";
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once "../config/database.php";
 
 $email = $_POST['email'] ?? '';
@@ -26,8 +28,12 @@ if($user && password_verify($password, $user['mot_de_passe'])){
     $stmt2 = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
 $stmt2->execute([$user['id']]);
 
+    if($user['role'] == 'admin'){
+    header("Location: ../admin_gerant/dashboard.php");
+} else {
     header("Location: ../dashboard/index.php");
-    exit();
+}
+exit();
 
 } else {
     $_SESSION['error'] = "Identifiant ou mot de passe incorrect";

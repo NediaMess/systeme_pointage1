@@ -199,26 +199,28 @@ body.grand {
 <div class="sidebar">
 
     <div class="logo">
-        <strong>CM2E</strong>
+        <img src="/img/logocm2e.png" alt="Logo CM2E">
     </div>
 
-<div class="profile">
-    <img src="../uploads/default.png" alt="Profile">
-    <h4><?= htmlspecialchars($_SESSION['user_prenom'] . " " . $_SESSION['user_nom']); ?></h4>
-    <small><?= $lang['job_title'] ?></small>
+    <div class="profile-bar">
+    <img src="/img/metro.jpg" alt="Profile">
+    <div class="profile-info">
+        <h4><?= htmlspecialchars($_SESSION['user_prenom'] . " " . $_SESSION['user_nom']); ?></h4>
+        <small><?= $lang['job_title'] ?></small>
+    </div>
 </div>
 
-<div class="menu">
-    <a href="?page=tableau_bord"><?= $lang['dashboard'] ?></a>
-    <a href="?page=calendrier_performance"><?= $lang['performance_calendar'] ?></a>
-    <a href="?page=projets"><?= $lang['projects'] ?></a>
-    <a href="?page=projet_courant"><?= $lang['current_project'] ?></a>
-    <a href="?page=parametres"><?= $lang['settings'] ?></a>
-</div>
+    <div class="menu">
+        <a href="?page=tableau_bord"><?= $lang['dashboard'] ?></a>
+        <a href="?page=calendrier_performance"><?= $lang['performance_calendar'] ?></a>
+        <a href="?page=projets"><?= $lang['projects'] ?></a>
+        <a href="?page=projet_courant"><?= $lang['current_project'] ?></a>
+        <a href="?page=parametres"><?= $lang['settings'] ?></a>
+    </div>
 
-<div class="logout">
-    <a href="../auth/logout.php"><?= $lang['logout'] ?></a>
-</div>
+    <div class="logout">
+        <a href="../auth/logout.php"><?= $lang['logout'] ?></a>
+    </div>
 
 </div>
 

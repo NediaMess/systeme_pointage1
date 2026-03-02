@@ -23,7 +23,21 @@ if(isset($_GET['date_select']) && !empty($_GET['date_select'])){
 /* Déterminer trimestre */
 $trimestre = ceil($mois_courant / 3);
 $premier_mois_trimestre = ($trimestre - 1) * 3 + 1;
+// 🔥 Synchroniser les mois avec le dashboard
+if ($calendar_view == 'trimester') {
 
+    $_SESSION['mois_selectionnes'] = [
+        $premier_mois_trimestre,
+        $premier_mois_trimestre + 1,
+        $premier_mois_trimestre + 2
+    ];
+
+} else {
+
+    // vue annuelle → 12 mois
+    $_SESSION['mois_selectionnes'] = range(1, 12);
+
+}
 /* Génération des mois selon vue */
 
 $mois = [];

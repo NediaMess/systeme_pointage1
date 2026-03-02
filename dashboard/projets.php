@@ -30,13 +30,10 @@ $allowedSort = ['nom_projet','date_creation'];
 $sort = in_array($_GET['sort'] ?? '', $allowedSort) ? $_GET['sort'] : 'date_creation';
 $order = ($_GET['order'] ?? '') === 'asc' ? 'ASC' : 'DESC';
 
-/* REQUETE */
 $stmt = $pdo->prepare("
-    SELECT p.*, COALESCE(SUM(d.score),0) AS score_total
+    SELECT *
     FROM projects p
-    LEFT JOIN daily_scores d ON p.id = d.project_id
     $where
-    GROUP BY p.id
     ORDER BY p.$sort $order
 ");
 
@@ -140,7 +137,7 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <!-- SCORE -->
                 <td>
                     <?php
-                        $score = $project['score_total'];
+                        $score = $project['score_ajoute'];
 
                         if($score > 0){
                             echo "<span class='score positive'>+$score</span>";
@@ -153,33 +150,30 @@ $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </td>
 
                 <!-- STATUS -->
-                <td>
-                    <?php
-                        $today = date('Y-m-d');
-
-                        if(!empty($project['date_fin']) && $project['date_fin'] < $today){
-                            echo '<span style="background-color: green; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">'
-                                 . $lang['completed'] .
-                                 '</span>';
-                        } else {
-                            echo '<span style="background-color: orange; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">'
-                                 . $lang['in_progress'] .
-                                 '</span>';
-                        }
-                    ?>
-                </td>
-
-                <td>
-                    <?= $project['date_fin'] 
-                        ? date('d/m/Y', strtotime($project['date_fin'])) 
-                        : '-' ?>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <tr>
-            <td colspan="7"><?= $lang['no_project_found'] ?></td>
-        </tr>
-    <?php endif; ?>
-    </tbody>
+<td>
+    <?php
+        if($project['statut'] == 'en_attente'){
+            echo '<span style="background-color: orange; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">
+                    En attente
+                  </span>';
+        }
+        elseif($project['statut'] == 'en_cours'){
+            echo '<span style="background-color: blue; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">
+                    En cours
+                  </span>';
+        }
+        elseif($project['statut'] == 'Terminé'){
+            echo '<span style="background-color: green; color:white; padding:5px 12px; border-radius:20px; font-size:12px;">
+                    Terminé
+                  </span>';
+        }
+    ?>
+</td>
+<?php endforeach; ?>
+<?php else: ?>
+<tr>
+    <td colspan="7"><?= $lang['no_project_found'] ?></td>
+</tr>
+<?php endif; ?>
+</tbody>
 </table>
