@@ -1,76 +1,131 @@
-<?php
-require_once "../lang_init.php";
-?>
+<?php require_once "../lang_init.php"; ?>
 
-<h2>
-    <?= $lang['settings'] ?> &gt;
-    🎨 <?= $lang['display_preferences'] ?>
-</h2>
+<div class="page-header animate-in">
+  <div>
+    <h1><?= $lang['display_preferences'] ?></h1>
 
-<form method="POST">
-
-    <!-- ================= THEME ================= -->
-    <div class="pref-box">
-        <h3><?= $lang['theme'] ?></h3>
-
-        <label>
-            <input type="radio" name="theme" value="light"
-            <?= (($_SESSION['theme'] ?? 'light') == 'light') ? 'checked' : '' ?>>
-            <?= $lang['light'] ?>
-        </label>
-
-        <label style="margin-left:20px;">
-            <input type="radio" name="theme" value="dark"
-            <?= (($_SESSION['theme'] ?? 'light') == 'dark') ? 'checked' : '' ?>>
-            <?= $lang['dark'] ?>
-        </label>
+    <div class="page-subtitle">
+      <?= (($_SESSION['lang'] ?? 'fr') === 'en')
+          ? 'Customize appearance and language'
+          : 'Personnalisez l\'apparence et la langue' ?>
     </div>
 
-    <br>
+  </div>
+</div>
 
-    <!-- ================= LANGUAGE ================= -->
-    <div class="pref-box">
+<form method="POST" action="index.php?page=preferences_affichage">
 
-        <h3><?= $lang['language_section'] ?></h3>
+  <input type="hidden" name="_redirect" value="index.php?page=preferences_affichage">
 
-        <p><strong><?= $lang['language'] ?> :</strong></p>
+  <!-- THEME -->
+  <div class="settings-section animate-in">
 
-        <select name="lang">
-            <option value="fr"
-                <?= ($_SESSION['lang'] ?? 'fr') == 'fr' ? 'selected' : '' ?>>
-                Français
-            </option>
+    <div class="settings-section-title">
+      <span class="s-icon">🎨</span><?= $lang['theme'] ?>
+    </div>
 
-            <option value="en"
-                <?= ($_SESSION['lang'] ?? 'fr') == 'en' ? 'selected' : '' ?>>
-                English
-            </option>
-        </select>
+    <div class="option-group">
 
-        <br><br>
+      <label class="option-pill">
+        <input type="radio"
+               name="theme"
+               value="light"
+               <?= (($_SESSION['theme']??'light')==='light')?'checked':'' ?>>
 
-        <!-- ================= TEXT SIZE ================= -->
+        ☀️ <?= $lang['light'] ?>
+      </label>
 
-        <p><strong><?= $lang['text_size'] ?> :</strong></p>
+      <label class="option-pill">
+        <input type="radio"
+               name="theme"
+               value="dark"
+               <?= (($_SESSION['theme']??'light')==='dark')?'checked':'' ?>>
 
-        <label>
-            <input type="radio" name="taille" value="normal"
-            <?= (($_SESSION['taille'] ?? 'normal') == 'normal') ? 'checked' : '' ?>>
-            <?= $lang['normal'] ?>
-        </label>
-
-        <label style="margin-left:20px;">
-            <input type="radio" name="taille" value="grand"
-            <?= (($_SESSION['taille'] ?? 'normal') == 'grand') ? 'checked' : '' ?>>
-            <?= $lang['large'] ?>
-        </label>
+        🌙 <?= $lang['dark'] ?>
+      </label>
 
     </div>
 
-    <br>
+  </div>
 
-    <button type="submit">
-        <?= $lang['save'] ?>
+  <!-- LANGUE -->
+  <div class="settings-section animate-in">
+
+    <div class="settings-section-title">
+      <span class="s-icon">🌐</span><?= $lang['language_section'] ?>
+    </div>
+
+    <span class="field-label"><?= $lang['language'] ?></span>
+
+    <div class="option-group">
+
+      <label class="option-pill">
+        <input type="radio"
+               name="lang"
+               value="fr"
+               <?= (($_SESSION['lang']??'fr')==='fr')?'checked':'' ?>>
+
+        🇫🇷 Français
+      </label>
+
+      <label class="option-pill">
+        <input type="radio"
+               name="lang"
+               value="en"
+               <?= (($_SESSION['lang']??'fr')==='en')?'checked':'' ?>>
+
+        🇬🇧 English
+      </label>
+
+    </div>
+
+  </div>
+
+  <!-- TEXT SIZE -->
+  <div class="settings-section animate-in">
+
+    <div class="settings-section-title">
+      <span class="s-icon">🔤</span><?= $lang['text_size'] ?>
+    </div>
+
+    <div class="option-group">
+
+      <label class="option-pill">
+
+        <input type="radio"
+               name="taille"
+               value="normal"
+               <?= (($_SESSION['taille']??'normal')==='normal')?'checked':'' ?>>
+
+        <span style="font-size:13px">Aa</span> <?= $lang['normal'] ?>
+
+      </label>
+
+      <label class="option-pill">
+
+        <input type="radio"
+               name="taille"
+               value="grand"
+               <?= (($_SESSION['taille']??'normal')==='grand')?'checked':'' ?>>
+
+        <span style="font-size:16px">Aa</span> <?= $lang['large'] ?>
+
+      </label>
+
+    </div>
+
+  </div>
+
+  <div class="save-btn-row animate-in">
+
+    <button type="submit"
+            class="btn-primary"
+            style="width:auto;padding:11px 32px">
+
+      <?= $lang['save'] ?>
+
     </button>
+
+  </div>
 
 </form>

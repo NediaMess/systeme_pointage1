@@ -7,479 +7,353 @@ if(!$user_id){
     header("Location: ../auth/login.php");
     exit();
 }
+
+/* ===== TERMINER PROJET ===== */
 if(isset($_POST['terminer_projet'])){
-
-    // 1️⃣ Récupérer le projet en cours
-    $stmt = $pdo->prepare("
-        SELECT * FROM projects
-        WHERE user_id = ?
-        AND statut = 'en_cours'
-        LIMIT 1
-    ");
+    $stmt = $pdo->prepare("SELECT * FROM projects WHERE user_id=? AND statut='en_cours' LIMIT 1");
     $stmt->execute([$user_id]);
-    $projet = $stmt->fetch(PDO::FETCH_ASSOC);
+    $proj = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if(!$projet){
-        die("Aucun projet en cours.");
+    if($proj){
+        $elapsed = round((time()-strtotime($proj['start_time']))/60);
+        $est = $proj['estimated_time'];
+
+        $score = ($elapsed==$est)?0:($elapsed<$est?1:-2);
+
+        $pdo->prepare("UPDATE projects SET statut='Terminé',date_fin=NOW(),score_ajoute=? WHERE id=?")
+            ->execute([$score,$proj['id']]);
+
+        $pdo->prepare("INSERT INTO daily_scores(user_id,project_id,score,date_score) VALUES(?,?,?,CURDATE())")
+            ->execute([$user_id,$proj['id'],$score]);
     }
-
-    // 2️⃣ Calcul du temps réel
-    $start = strtotime($projet['start_time']);
-    $end = time();
-    $real_time = round(($end - $start) / 60);
-    $estimated = $projet['estimated_time'];
-
-    // 3️⃣ Calcul du score
-    if($real_time == $estimated){
-        $score = 0;
-    }
-    elseif($real_time < $estimated){
-        $score = 1;
-    }
-    else{
-        $score = -2;
-    }
-
-    // 4️⃣ Mise à jour du projet
-    $stmt = $pdo->prepare("
-        UPDATE projects
-        SET statut = 'Terminé',
-            date_fin = NOW(),
-            score_ajoute = ?
-        WHERE id = ?
-    ");
-    $stmt->execute([$score, $projet['id']]);
-
-    // 5️⃣ Ajouter score au calendrier
-    $stmt = $pdo->prepare("
-        INSERT INTO daily_scores (user_id, project_id, score, date_score)
-        VALUES (?, ?, ?, CURDATE())
-    ");
-    $stmt->execute([$user_id, $projet['id'], $score]);
 
     header("Location: index.php?page=projet_courant");
     exit();
 }
-/* ==============================
-   RÉCUPÉRER PROJET (OBLIGATOIRE)
-============================== */
 
-// Chercher projet en cours
-$stmt = $pdo->prepare("
-    SELECT * FROM projects
-    WHERE user_id = ?
-    AND statut = 'en_cours'
-    ORDER BY date_creation DESC
-    LIMIT 1
-");
+/* ===== PROJET ACTUEL ===== */
+
+$stmt = $pdo->prepare("SELECT * FROM projects WHERE user_id=? AND statut='en_cours' ORDER BY date_creation DESC LIMIT 1");
 $stmt->execute([$user_id]);
 $projet = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Sinon chercher projet en attente
 if(!$projet){
-    $stmt = $pdo->prepare("
-        SELECT * FROM projects
-        WHERE user_id = ?
-        AND statut = 'en_attente'
-        ORDER BY date_creation ASC
-        LIMIT 1
-    ");
+    $stmt = $pdo->prepare("SELECT * FROM projects WHERE user_id=? AND statut='en_attente' ORDER BY date_creation ASC LIMIT 1");
     $stmt->execute([$user_id]);
     $projet = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Si aucun projet
-if(!$projet){
-    echo "<h3>Aucun projet en cours</h3>";
-    return;
-}
-/* ==============================
-   RÉCUPÉRER RAPPORT (SÉCURISÉ)
-============================== */
+/* ===== RAPPORT ===== */
 
 $report = null;
 
 if($projet){
 
-    $stmt = $pdo->prepare("
-        SELECT * FROM project_reports
-        WHERE project_id = ?
-    ");
+    $stmt = $pdo->prepare("SELECT * FROM project_reports WHERE project_id=?");
     $stmt->execute([$projet['id']]);
     $report = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if(!$report){
-        $stmt = $pdo->prepare("
-            INSERT INTO project_reports (project_id)
-            VALUES (?)
-        ");
-        $stmt->execute([$projet['id']]);
+        $pdo->prepare("INSERT INTO project_reports(project_id) VALUES(?)")
+            ->execute([$projet['id']]);
 
-        $stmt = $pdo->prepare("
-            SELECT * FROM project_reports
-            WHERE project_id = ?
-        ");
         $stmt->execute([$projet['id']]);
         $report = $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
 
-/* ==============================
-   RÉCUPÉRER RAPPORT
-============================== */
+/* ===== ACTIONS ===== */
 
-if($projet){
+if(isset($_POST['mode_travail']) && $projet){
 
-    $stmt = $pdo->prepare("
-        SELECT * FROM project_reports
-        WHERE project_id = ?
-    ");
-    $stmt->execute([$projet['id']]);
-    $report = $stmt->fetch(PDO::FETCH_ASSOC);
+    $m = $_POST['mode_travail'];
 
-    if(!$report){
-        $stmt = $pdo->prepare("
-            INSERT INTO project_reports (project_id)
-            VALUES (?)
-        ");
-        $stmt->execute([$projet['id']]);
-
-        $stmt = $pdo->prepare("
-            SELECT * FROM project_reports
-            WHERE project_id = ?
-        ");
-        $stmt->execute([$projet['id']]);
-        $report = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
-}
-
-if(!$report){
-    $stmt = $pdo->prepare("
-        INSERT INTO project_reports (project_id)
-        VALUES (?)
-    ");
-    $stmt->execute([$projet['id']]);
-
-    $stmt = $pdo->prepare("
-        SELECT * FROM project_reports
-        WHERE project_id = ?
-    ");
-    $stmt->execute([$projet['id']]);
-    $report = $stmt->fetch(PDO::FETCH_ASSOC);
-}
-/* ==============================
-   UPDATE MODE TRAVAIL
-============================== */
-
-if(isset($_POST['mode_travail'])){
-
-    $mode = $_POST['mode_travail'];
-
-    if(in_array($mode, ['solo','equipe'])){
-        $stmt = $pdo->prepare("
-            UPDATE projects
-            SET mode_travail = ?
-            WHERE id = ?
-        ");
-        $stmt->execute([$mode, $projet['id']]);
-    }
-
-    header("Location: index.php?page=projet_courant");
-    exit();
-}
-/* ==============================
-   TOGGLE CHECKLIST
-============================== */
-
-if(isset($_POST['toggle_checklist'])){
-
-    $stmt = $pdo->prepare("
-        UPDATE projects
-        SET checklist_rempli = NOT checklist_rempli
-        WHERE id = ?
-    ");
-    $stmt->execute([$projet['id']]);
-
-    header("Location: index.php?page=projet_courant");
-    exit();
-}
-
-/* ==============================
-   TOGGLE RAPPORT
-============================== */
-
-if(isset($_POST['toggle_report'])){
-
-    $field = $_POST['toggle_report'];
-
-    $allowed = ['finaliser','verifier','envoyer','commande'];
-
-    if(in_array($field, $allowed)){
-        $stmt = $pdo->prepare("
-            UPDATE project_reports
-            SET $field = NOT $field
-            WHERE project_id = ?
-        ");
-        $stmt->execute([$projet['id']]);
+    if(in_array($m,['solo','equipe'])){
+        $pdo->prepare("UPDATE projects SET mode_travail=? WHERE id=?")
+            ->execute([$m,$projet['id']]);
     }
 
     header("Location: index.php?page=projet_courant");
     exit();
 }
 
-/* ==============================
-   UPDATE DESCRIPTION
-============================== */
+if(isset($_POST['toggle_checklist']) && $projet){
 
-if(isset($_POST['description'])){
-
-    $description = $_POST['description'];
-
-    $update = $pdo->prepare("
-        UPDATE projects
-        SET description = ?
-        WHERE id = ?
-    ");
-    $update->execute([$description, $projet['id']]);
+    $pdo->prepare("UPDATE projects SET checklist_rempli=NOT checklist_rempli WHERE id=?")
+        ->execute([$projet['id']]);
 
     header("Location: index.php?page=projet_courant");
     exit();
 }
-?>
 
-<h2>
-    Projet courant : 
-    <p style="color:red;">
-STATUT ACTUEL : <?= $projet['statut']; ?>
-</p>
-    <span style="color:green;">
-        <?= htmlspecialchars($projet['nom_projet']) ?>
-    </span>
-</h2>
-<?php if(trim(strtolower($projet['statut'])) == 'en_attente'): ?>
+if(isset($_POST['toggle_report']) && $projet){
 
-<button type="button"
-        onclick="openStartModal()"
-        style="padding:6px 16px;
-               background:#1976d2;
-               color:white;
-               border:none;
-               border-radius:6px;
-               cursor:pointer;
-               margin-top:10px;">
-    ▶ Commencer le projet
-</button>
+    $f = $_POST['toggle_report'];
 
-<?php endif; ?>
-<?php if($projet['statut'] == 'en_cours'): ?>
+    if(in_array($f,['finaliser','verifier','envoyer','commande'])){
+        $pdo->prepare("UPDATE project_reports SET $f=NOT $f WHERE project_id=?")
+            ->execute([$projet['id']]);
+    }
 
-<?php
-$estimated_seconds = $projet['estimated_time'] * 60;
-$start = strtotime($projet['start_time']);
-$now = time();
+    header("Location: index.php?page=projet_courant");
+    exit();
+}
 
-$elapsed = $now - $start;
-$remaining = $estimated_seconds - $elapsed;
+if(isset($_POST['description']) && $projet){
 
-$is_late = $remaining < 0;
-?>
+    $pdo->prepare("UPDATE projects SET description=? WHERE id=?")
+        ->execute([$_POST['description'],$projet['id']]);
 
-<h3 style="color: <?= $is_late ? 'red' : 'green' ?>;">
-    Temps restant :
-    <?= gmdate("H:i:s", abs($remaining)) ?>
-</h3>
+    header("Location: index.php?page=projet_courant");
+    exit();
+}
 
-<?php endif; ?>
-<br>
+/* ===== SI AUCUN PROJET ===== */
 
-<p>
-   <h3>Mode de travail :</h3>
+if(!$projet): ?>
 
-<form method="POST">
+<div class="page-header animate-in">
+  <div>
+    <h1><?= $lang['current_project'] ?></h1>
+  </div>
+</div>
 
-    <label>
-        <input type="radio"
-               name="mode_travail"
-               value="solo"
-               onchange="this.form.submit()"
-               <?= $projet['mode_travail'] === 'solo' ? 'checked' : '' ?>>
-        Solo
-    </label>
+<div class="card animate-in" style="text-align:center;padding:60px 20px">
 
-    <br>
+  <div style="font-size:40px;margin-bottom:16px">📭</div>
 
-    <label>
-        <input type="radio"
-               name="mode_travail"
-               value="equipe"
-               onchange="this.form.submit()"
-               <?= $projet['mode_travail'] === 'equipe' ? 'checked' : '' ?>>
-        En équipe
-    </label>
+  <div style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px">
+    <?= $lang['no_project'] ?>
+  </div>
 
-</form>
-</p>
+  <p style="color:var(--text-2);font-size:14px;margin-bottom:24px">
+    <?= $lang['no_project_available'] ?>
+  </p>
 
-<br>
+  <a href="?page=projets" class="btn-secondary">
+    <?= $lang['projects'] ?>
+  </a>
 
-<h3>CheckList :</h3>
+</div>
 
-<form method="POST">
-    <input type="hidden" name="toggle_checklist" value="1">
-    <input type="checkbox"
-           onchange="this.form.submit()"
-           <?= !empty($projet['checklist_rempli']) ? 'checked' : '' ?>>
-</form>
+<?php return; endif;
 
-<span style="color: <?= !empty($projet['checklist_rempli']) ? 'green' : 'red' ?>;">
-    Rempli
-</span>
+/* ===== TIMER ===== */
 
-<br><br>
+$is_en_cours = $projet['statut'] === 'en_cours';
 
-<h3>Rapport :</h3>
+$remaining = null;
+$is_late = false;
 
-<?php
+if($is_en_cours && !empty($projet['start_time'])){
+
+    $elapsed   = time() - strtotime($projet['start_time']);
+    $remaining = ($projet['estimated_time']*60) - $elapsed;
+    $is_late   = $remaining < 0;
+}
+
 $rapports = [
-    'finaliser' => 'Finaliser',
-    'verifier' => 'Verifier',
-    'envoyer' => 'Envoyer',
-    'commande' => 'Commande'
+    'finaliser'=>$lang['finalize'],
+    'verifier'=>$lang['verify'],
+    'envoyer'=>$lang['send'],
+    'commande'=>$lang['order']
 ];
 
-foreach($rapports as $field => $label):
+$checklist_rempli = !empty($projet['checklist_rempli']);
 ?>
 
-<form method="POST" style="display:inline;">
-    <input type="hidden" name="toggle_report" value="<?= $field ?>">
-    <input type="checkbox"
-           onchange="this.form.submit()"
-           <?= !empty($report[$field]) ? 'checked' : '' ?>>
-</form>
+<div class="page-header animate-in">
+  <div>
+    <h1><?= $lang['current_project'] ?></h1>
+    <div class="page-subtitle"><?= $lang['real_time_tracking'] ?></div>
+  </div>
+</div>
 
-<span style="color: <?= !empty($report[$field]) ? 'blue' : 'black' ?>;">
-    <?= $label ?>
+<!-- HERO -->
+<div class="proj-hero animate-in">
+
+  <div>
+
+    <div class="proj-hero-label">
+      <?= $projet['statut']==='en_cours'
+        ? '⬤ '.$lang['in_progress']
+        : '◌ '.$lang['pending'] ?>
+    </div>
+
+    <div class="proj-hero-name">
+      <?= htmlspecialchars($projet['nom_projet']) ?>
+    </div>
+
+    <div class="proj-hero-meta">
+      <?= $lang['creation_date'] ?>
+      <?= date('d/m/Y', strtotime($projet['date_creation'])) ?>
+    </div>
+
+  </div>
+
+  <div class="proj-hero-actions">
+
+    <?php if($projet['statut']==='en_attente'): ?>
+
+      <button class="btn-start"
+        onclick="document.getElementById('startModal').classList.add('open')">
+
+        ▶ <?= $lang['start_project'] ?>
+
+      </button>
+
+    <?php endif; ?>
+
+    <?php if($projet['statut']==='en_cours'): ?>
+
+      <button class="btn-finish"
+        onclick="document.getElementById('finishModal').classList.add('open')">
+
+        ✓ <?= $lang['finish_project'] ?>
+
+      </button>
+
+    <?php endif; ?>
+
+  </div>
+
+</div>
+
+<div class="current-page-grid">
+
+<!-- MODE TRAVAIL -->
+
+<div class="card animate-in">
+
+  <div class="card-title"><?= $lang['work_mode'] ?></div>
+
+  <form method="POST">
+
+    <div class="mode-toggle">
+
+      <button type="submit" name="mode_travail" value="solo"
+        class="mode-btn <?= $projet['mode_travail']==='solo'?'selected':'' ?>">
+
+        👤 <?= $lang['solo'] ?>
+
+      </button>
+
+      <button type="submit" name="mode_travail" value="equipe"
+        class="mode-btn <?= $projet['mode_travail']==='equipe'?'selected':'' ?>">
+
+        👥 <?= $lang['team'] ?>
+
+      </button>
+
+    </div>
+
+  </form>
+
+</div>
+
+<!-- CHECKLIST -->
+
+<div class="card animate-in">
+
+<div class="card-title"><?= $lang['checklist'] ?></div>
+
+<form method="POST">
+
+<input type="hidden" name="toggle_checklist" value="1">
+
+<div class="check-item <?= $checklist_rempli?'checked':'' ?>">
+
+<input type="checkbox"
+ onchange="this.form.submit()"
+ <?= $checklist_rempli?'checked':'' ?>>
+
+<label><?= $lang['checklist_completed'] ?></label>
+
+<span class="checklist-status <?= $checklist_rempli?'checklist-ok':'checklist-pending' ?>">
+
+<?= $checklist_rempli ? '✓ '.$lang['completed'] : '✗ '.$lang['pending'] ?>
+
 </span>
 
-<br>
+</div>
+
+</form>
+
+</div>
+
+<!-- RAPPORT -->
+
+<div class="card animate-in">
+
+<div class="card-title"><?= $lang['report'] ?></div>
+
+<?php foreach($rapports as $field => $label):
+
+$checked = !empty($report[$field]);
+
+?>
+
+<form method="POST">
+
+<input type="hidden" name="toggle_report" value="<?= $field ?>">
+
+<div class="check-item <?= $checked?'rapport-checked':'' ?>">
+
+<input type="checkbox"
+ onchange="this.form.submit()"
+ <?= $checked?'checked':'' ?>>
+
+<label class="<?= $checked?'rapport-label-done':'' ?>">
+
+<?= $label ?>
+
+</label>
+
+<?php if($checked): ?>
+
+<span style="color:var(--blue);font-size:12px;font-weight:700">✓</span>
+
+<?php endif; ?>
+
+</div>
+
+</form>
 
 <?php endforeach; ?>
 
-<br>
+</div>
 
-<!-- ================= DESCRIPTION ================= -->
+<!-- DESCRIPTION -->
+
+<div class="card col-full animate-in">
+
+<div class="card-title">
+
+<?= $lang['description_checklist'] ?>
+
+</div>
 
 <form method="POST">
 
-    <label><strong>Description (CheckList) :</strong></label><br><br>
+<textarea name="description"
+class="desc-textarea"
+placeholder="<?= $lang['write_remark'] ?>"
+required>
 
-     <textarea name="description"
-          rows="5"
-          style="width:400px; padding:8px;"
-          placeholder="Veuillez écrire ici vos remarques concernant la checklist..."
-          required><?= htmlspecialchars($projet['description'] ?? '') ?></textarea>
+<?= htmlspecialchars($projet['description'] ?? '') ?>
 
-    <br><br>
+</textarea>
 
-    <button type="submit"
-            style="padding:6px 16px;
-                   background:#e53935;
-                   color:white;
-                   border:none;
-                   border-radius:6px;
-                   cursor:pointer;">
-        Envoyer
-    </button>
+<button type="submit"
+class="btn-primary"
+style="width:auto;padding:11px 28px">
 
-</form>
-<form method="POST" onsubmit="return confirm('Êtes-vous sûr d\'avoir terminé ce projet ?');">
+<?= $lang['save'] ?>
 
-    <input type="hidden" name="terminer_projet" value="1">
-
-    <button type="button"
-        onclick="openModal()"
-        style="padding:6px 16px;
-               background:#2e7d32;
-               color:white;
-               border:none;
-               border-radius:6px;
-               cursor:pointer;">
-    Terminer le projet
 </button>
 
 </form>
-<!-- ================= MODALE TERMINER ================= -->
 
-<div id="confirmModal" class="modal">
-    <div class="modal-content">
-        <h3>Confirmer</h3>
-        <p>Êtes-vous sûr d'avoir terminé ce projet ?</p>
-
-        <div class="modal-buttons">
-            <form method="POST">
-                <input type="hidden" name="terminer_projet" value="1">
-                <button type="submit" class="btn-confirm">
-                    Oui, terminer
-                </button>
-            </form>
-
-            <button onclick="closeModal()" class="btn-cancel">
-                Annuler
-            </button>
-        </div>
-    </div>
 </div>
 
-<!-- ================= MODALE START ================= -->
-
-<div id="startModal" class="modal">
-    <div class="modal-content">
-        <h3>Confirmer</h3>
-        <p>Le chrono va commencer pour ce projet.</p>
-
-        <div class="modal-buttons">
-            <form method="GET" action="start_project.php">
-                <input type="hidden" name="id" value="<?= $projet['id'] ?>">
-                <button type="submit" class="btn-confirm">
-                    Oui, commencer
-                </button>
-            </form>
-
-            <button onclick="closeStartModal()" class="btn-cancel">
-                Annuler
-            </button>
-        </div>
-    </div>
 </div>
-</div>
-<script>
-function openModal(){
-    document.getElementById("confirmModal").style.display = "flex";
-}
-
-function closeModal(){
-    document.getElementById("confirmModal").style.display = "none";
-}
-function openStartModal(){
-    document.getElementById("startModal").style.display = "flex";
-}
-
-function closeStartModal(){
-    document.getElementById("startModal").style.display = "none";
-}
-</script>
-<?php if($projet['statut'] == 'en_attente'): ?>
-
-<button type="button"
-        onclick="openStartModal()"
-        style="padding:6px 16px;
-               background:#1976d2;
-               color:white;
-               border:none;
-               border-radius:6px;
-               cursor:pointer;">
-    ▶ Commencer le projet
-</button>
-
-<?php endif; ?>

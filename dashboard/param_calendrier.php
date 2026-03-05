@@ -4,130 +4,140 @@ require_once "../config/database.php";
 
 $user_id = $_SESSION['user_id'] ?? null;
 
-/* =============================
-   SAVE SETTINGS
-============================= */
+if($_SERVER['REQUEST_METHOD']==='POST' && !isset($_POST['new_off_day'])){
+  $_SESSION['calendar_view'] = $_POST['calendar_view'] ?? 'trimester';
+  $_SESSION['first_day']     = $_POST['first_day'] ?? 'monday';
 
-if($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['new_off_day'])){
-
-    $_SESSION['calendar_view'] = $_POST['calendar_view'] ?? 'trimester';
-    $_SESSION['first_day'] = $_POST['first_day'] ?? 'monday';
-
-    header("Location: index.php?page=param_calendrier");
-    exit();
+  header("Location: index.php?page=param_calendrier");
+  exit();
 }
-
-/* =============================
-   ADD NEW NON WORKING DAY
-============================= */
 
 if(isset($_POST['new_off_day'])){
+  $pdo->prepare("INSERT INTO non_working_days(user_id,date_off) VALUES(?,?)")
+      ->execute([$user_id,$_POST['new_off_day']]);
 
-    $date_off = $_POST['new_off_day'];
-
-    $stmt = $pdo->prepare("
-        INSERT INTO non_working_days (user_id, date_off)
-        VALUES (?, ?)
-    ");
-
-    $stmt->execute([$user_id, $date_off]);
-
-    header("Location: index.php?page=param_calendrier");
-    exit();
+  header("Location: index.php?page=param_calendrier");
+  exit();
 }
 
-/* =============================
-   CURRENT VALUES
-============================= */
+$cv  = $_SESSION['calendar_view'] ?? 'trimester';
+$fd  = $_SESSION['first_day'] ?? 'monday';
 
-$calendar_view = $_SESSION['calendar_view'] ?? 'trimester';
-$first_day = $_SESSION['first_day'] ?? 'monday';
+$stmt=$pdo->prepare("SELECT date_off FROM non_working_days WHERE user_id=? ORDER BY date_off DESC LIMIT 10");
+$stmt->execute([$user_id]);
+$off_days=$stmt->fetchAll(PDO::FETCH_COLUMN);
 ?>
 
-<h2>
-    <?= $lang['settings'] ?> &gt; 
-    <?= $lang['calendar_settings'] ?>
-</h2>
-
-<!-- ================= SETTINGS FORM ================= -->
+<div class="page-header animate-in">
+  <div>
+    <h1><?= $lang['calendar_settings'] ?></h1>
+    <div class="page-subtitle"><?= $lang['calendar_preferences_desc'] ?></div>
+  </div>
+</div>
 
 <form method="POST">
 
-    <!-- Bloc 1 -->
-    <div class="pref-box">
-        <h3><?= $lang['calendar_display'] ?></h3>
+<div class="settings-section animate-in">
 
-        <p><strong><?= $lang['default_view'] ?> :</strong></p>
+  <div class="settings-section-title">
+    <span class="s-icon">📅</span><?= $lang['calendar_display'] ?>
+  </div>
 
-        <label>
-            <input type="radio" name="calendar_view" value="trimester"
-            <?= $calendar_view=='trimester'?'checked':'' ?>>
-            <?= $lang['quarterly'] ?>
-        </label>
+  <span class="field-label"><?= $lang['default_view'] ?></span>
 
-        <label style="margin-left:20px;">
-            <input type="radio" name="calendar_view" value="year"
-            <?= $calendar_view=='year'?'checked':'' ?>>
-            <?= $lang['annual'] ?>
-        </label>
+  <div class="option-group">
 
-        <br><br>
+    <label class="option-pill">
+      <input type="radio" name="calendar_view" value="trimester"
+        <?= $cv==='trimester'?'checked':'' ?>>
 
-        <p><strong><?= $lang['first_day_week'] ?> :</strong></p>
+      📊 <?= $lang['quarterly'] ?>
+    </label>
 
-        <label>
-            <input type="radio" name="first_day" value="monday"
-            <?= $first_day=='monday'?'checked':'' ?>>
-            <?= $lang['monday'] ?>
-        </label>
+    <label class="option-pill">
+      <input type="radio" name="calendar_view" value="year"
+        <?= $cv==='year'?'checked':'' ?>>
 
-        <label style="margin-left:20px;">
-            <input type="radio" name="first_day" value="sunday"
-            <?= $first_day=='sunday'?'checked':'' ?>>
-            <?= $lang['sunday'] ?>
-        </label>
-    </div>
+      📆 <?= $lang['annual'] ?>
+    </label>
 
-    <br>
+  </div>
 
+  <span class="field-label"><?= $lang['first_day_week'] ?></span>
 
-<br>
+  <div class="option-group">
 
-<!-- ================= ADD SPECIFIC OFF DAY ================= -->
+    <label class="option-pill">
+      <input type="radio" name="first_day" value="monday"
+        <?= $fd==='monday'?'checked':'' ?>>
 
-<div class="pref-box">
+      <?= $lang['monday'] ?>
+    </label>
 
-    <h3><?= $lang['non_working_days'] ?></h3>
+    <label class="option-pill">
+      <input type="radio" name="first_day" value="sunday"
+        <?= $fd==='sunday'?'checked':'' ?>>
 
-    <form method="POST"
-          style="margin-top:10px; display:flex; gap:10px; align-items:center;">
+      <?= $lang['sunday'] ?>
+    </label>
 
-        <input type="date" name="new_off_day" required
-               style="padding:6px; border-radius:6px; border:1px solid #ccc;">
+  </div>
 
-        <button type="submit"
-                style="padding:6px 14px;
-                       border-radius:6px;
-                       border:none;
-                       background:#e53935;
-                       color:white;
-                       cursor:pointer;">
-            Ajouter
-        </button>
-
-    </form>
+  <div class="save-btn-row">
+    <button type="submit" class="btn-primary" style="width:auto;padding:11px 28px">
+      <?= $lang['save'] ?>
+    </button>
+  </div>
 
 </div>
-    <div style="text-align:center; margin-top:20px;">
-        <button type="submit"
-                style="padding:8px 20px;
-                       border-radius:6px;
-                       border:none;
-                       background:#e53935;
-                       color:white;
-                       cursor:pointer;">
-            <?= $lang['save'] ?>
-        </button>
-    </div>
 
 </form>
+
+<div class="settings-section animate-in">
+
+  <div class="settings-section-title">
+    <span class="s-icon">🚫</span><?= $lang['non_working_days'] ?>
+  </div>
+
+  <form method="POST"
+        style="display:flex;gap:12px;align-items:flex-end;margin-bottom:20px;flex-wrap:wrap">
+
+    <div class="form-group"
+         style="margin-bottom:0;flex:1;min-width:200px;max-width:260px">
+
+      <label><?= $lang['add_date'] ?></label>
+
+      <input type="date" name="new_off_day" required>
+
+    </div>
+
+    <button type="submit"
+            class="btn-primary"
+            style="width:auto;padding:11px 20px;margin-top:0">
+
+      + <?= $lang['add'] ?>
+
+    </button>
+
+  </form>
+
+  <?php if($off_days): ?>
+
+    <?php foreach($off_days as $d): ?>
+
+      <div class="info-row">
+        <span class="info-label">🚫 <?= $lang['non_working_day'] ?></span>
+        <span class="info-value"><?= date('d/m/Y',strtotime($d)) ?></span>
+      </div>
+
+    <?php endforeach; ?>
+
+  <?php else: ?>
+
+    <p style="color:var(--text-3);font-size:13px;text-align:center;padding:16px 0">
+      <?= $lang['no_non_working_days'] ?>
+    </p>
+
+  <?php endif; ?>
+
+</div>

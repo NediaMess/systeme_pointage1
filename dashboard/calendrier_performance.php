@@ -1,380 +1,239 @@
 <?php
 require_once "../lang_init.php";
 require_once "../config/database.php";
+
 $user_id = $_SESSION['user_id'];
+
 $calendar_view = $_SESSION['calendar_view'] ?? 'trimester';
-$first_day = $_SESSION['first_day'] ?? 'monday';
+$first_day     = $_SESSION['first_day'] ?? 'monday';
 
+$mois_courant = isset($_GET['mois'])  ? (int)$_GET['mois']  : date('n');
+$annee        = isset($_GET['annee']) ? (int)$_GET['annee'] : date('Y');
 
-/* ===============================
-   GESTION MOIS / ANNEE
-=================================*/
-
-$mois_courant = isset($_GET['mois']) ? (int)$_GET['mois'] : date('n');
-$annee = isset($_GET['annee']) ? (int)$_GET['annee'] : date('Y');
-
-/* Si date sélectionnée */
 if(isset($_GET['date_select']) && !empty($_GET['date_select'])){
-    $date = $_GET['date_select'];
-    $mois_courant = date('n', strtotime($date));
-    $annee = date('Y', strtotime($date));
+    $d = $_GET['date_select'];
+    $mois_courant = date('n', strtotime($d));
+    $annee        = date('Y', strtotime($d));
 }
 
-/* Déterminer trimestre */
 $trimestre = ceil($mois_courant / 3);
 $premier_mois_trimestre = ($trimestre - 1) * 3 + 1;
-// 🔥 Synchroniser les mois avec le dashboard
-if ($calendar_view == 'trimester') {
 
-    $_SESSION['mois_selectionnes'] = [
-        $premier_mois_trimestre,
-        $premier_mois_trimestre + 1,
-        $premier_mois_trimestre + 2
-    ];
-
+if($calendar_view == 'trimester'){
+    $_SESSION['mois_selectionnes'] = [$premier_mois_trimestre, $premier_mois_trimestre+1, $premier_mois_trimestre+2];
 } else {
-
-    // vue annuelle → 12 mois
-    $_SESSION['mois_selectionnes'] = range(1, 12);
-
+    $_SESSION['mois_selectionnes'] = range(1,12);
 }
-/* Génération des mois selon vue */
 
 $mois = [];
-
 if($calendar_view == 'trimester'){
-
-    for ($i = 0; $i < 3; $i++) {
-        $mois[] = [
-            'mois' => $premier_mois_trimestre + $i,
-            'annee' => $annee
-        ];
-    }
-
-} else { // vue annuelle
-
-    for ($m = 1; $m <= 12; $m++) {
-        $mois[] = [
-            'mois' => $m,
-            'annee' => $annee
-        ];
-    }
-}
-/* ===============================
-   NAVIGATION
-=================================*/
-
-if($calendar_view == 'trimester'){
-
-    $mois_precedent = $premier_mois_trimestre - 3;
-    $mois_suivant = $premier_mois_trimestre + 3;
-    $annee_precedente = $annee;
-    $annee_suivante = $annee;
-
-    if ($mois_precedent < 1) {
-        $mois_precedent += 12;
-        $annee_precedente--;
-    }
-
-    if ($mois_suivant > 12) {
-        $mois_suivant -= 12;
-        $annee_suivante++;
-    }
-
+    for($i=0;$i<3;$i++) $mois[] = ['mois'=>$premier_mois_trimestre+$i,'annee'=>$annee];
 } else {
-
-    $mois_precedent = $mois_courant;
-    $mois_suivant = $mois_courant;
-    $annee_precedente = $annee - 1;
-    $annee_suivante = $annee + 1;
+    for($m=1;$m<=12;$m++) $mois[] = ['mois'=>$m,'annee'=>$annee];
 }
 
-/* ===============================
-   SCORES
-=================================*/
+if($calendar_view=='trimester'){
+    $mp = $premier_mois_trimestre-3; $ap = $annee;
+    $ms = $premier_mois_trimestre+3; $as = $annee;
+    if($mp<1){$mp+=12;$ap--;}
+    if($ms>12){$ms-=12;$as++;}
+} else {
+    $mp=$mois_courant; $ap=$annee-1;
+    $ms=$mois_courant; $as=$annee+1;
+}
 
-$stmt = $pdo->prepare("
-    SELECT date_score, score
-    FROM daily_scores
-    WHERE user_id = ?
-");
+$stmt = $pdo->prepare("SELECT date_score, score FROM daily_scores WHERE user_id=?");
 $stmt->execute([$user_id]);
-$scores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $scores_par_date = [];
-foreach ($scores as $s) {
-    $scores_par_date[date('Y-m-d', strtotime($s['date_score']))] = $s['score'];
+foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $s){
+    $scores_par_date[date('Y-m-d',strtotime($s['date_score']))] = $s['score'];
 }
 
 $today = date('Y-m-d');
-$stmt = $pdo->prepare("
-    SELECT date_off 
-    FROM non_working_days 
-    WHERE user_id = ?
-");
+
+$stmt  = $pdo->prepare("SELECT date_off FROM non_working_days WHERE user_id=?");
 $stmt->execute([$user_id]);
-
 $off_days_db = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+$mois_noms = ($lang_code === 'en') ? [
+1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
+7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'
+] : [
+1=>'Janvier',2=>'Février',3=>'Mars',4=>'Avril',5=>'Mai',6=>'Juin',
+7=>'Juillet',8=>'Août',9=>'Septembre',10=>'Octobre',11=>'Novembre',12=>'Décembre'
+];
 ?>
-
-
-<!-- ===============================
-     FLATPICKR (Mini Calendrier)
-=================================-->
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-<style>
-body { font-family: Arial, sans-serif; }
+<!-- Page header -->
+<div class="page-header animate-in">
+  <div>
+    <h1><?= $lang['performance_calendar'] ?></h1>
+    <div class="page-subtitle"><?= $lang['daily_scores'] ?></div>
+  </div>
+</div>
 
-.navigation {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 30px;
-}
+<!-- Navigation -->
+<div class="cal-nav animate-in">
 
-.navigation a {
-    font-size: 20px;
-    text-decoration: none;
-    color: #333;
-}
-.hidden-date-input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-}
-.calendar-btn {
-    background: white;
-    border: 1px solid #ccc;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-}
+  <a class="cal-nav-btn" href="?page=calendrier_performance&mois=<?= $mp ?>&annee=<?= $ap ?>">←</a>
 
-.calendar-btn:hover {
-    background: #f4f4f4;
-}
+  <div class="cal-nav-center">
 
-.calendrier-container {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-}
+    <span class="cal-nav-title">
 
-.calendrier-container > div {
-    text-align: center;
-}
+      <?php if($calendar_view=='trimester'): ?>
 
-table { border-collapse: collapse; }
+         <?= $mois_noms[$mois[0]['mois']] ?>
+         <?= $mois_noms[$mois[1]['mois']] ?>
+         <?= $mois_noms[$mois[2]['mois']] ?> <?= $annee ?>
 
-th {
-    background-color: #f4f4f4;
-    padding: 4px;
-    font-size: 13px;
-}
+      <?php else: ?>
 
-td {
-    width: 50px;
-    height: 60px;
-    border: 1px solid #ddd;
-    vertical-align: top;
-    text-align: center;
-}
+        <?= $lang['year'] ?> <?= $annee ?>
 
-.day-number {
-    font-weight: bold;
-    font-size: 13px;
-}
+      <?php endif; ?>
 
-.today-dot {
-    width: 5px;
-    height: 5px;
-    background: orange;
-    border-radius: 50%;
-    margin: 3px auto;
-}
+    </span>
 
-.score-circle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    font-size: 10px;
-    font-weight: bold;
-    color: white;
-    margin: 3px auto;
-}
-.year-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
-}
-.day-off {
-    background-color: #ffebee;
-}
+    <!-- Date picker -->
+    <form method="GET" id="dateForm" style="position:relative">
+      <input type="hidden" name="page" value="calendrier_performance">
 
-.day-off .day-number {
-    color: red;
-    font-weight: bold;
-}
+      <input type="text"
+             id="datePicker"
+             name="date_select"
+             style="position:absolute;opacity:0;width:0;height:0;pointer-events:none">
 
-.score-green { background-color: #4CAF50; }
-.score-red { background-color: #f44336; }
-</style>
-
-<h2>Calendrier de performances</h2>
-
-<!-- ===============================
-     NAVIGATION
-=================================-->
-
-<div class="navigation">
-
-    <a href="?page=calendrier_performance&mois=<?= $mois_precedent ?>&annee=<?= $annee_precedente ?>">←</a>
-
-  <strong>
-
-<?php if($calendar_view == 'trimester'): ?>
-
-    <?= date('M', mktime(0,0,0,$mois[0]['mois'],1,$mois[0]['annee'])) ?>
-    -
-    <?= date('M', mktime(0,0,0,$mois[1]['mois'],1,$mois[1]['annee'])) ?>
-    -
-    <?= date('M', mktime(0,0,0,$mois[2]['mois'],1,$mois[2]['annee'])) ?>
-    <?= $annee ?>
-
-<?php else: ?>
-
-    <?= $annee ?>
-
-<?php endif; ?>
-
-</strong>
-    <a href="?page=calendrier_performance&mois=<?= $mois_suivant ?>&annee=<?= $annee_suivante ?>">→</a>
-
-    <!-- Bouton mini calendrier -->
-    <form method="GET" id="dateForm">
-        <input type="hidden" name="page" value="calendrier_performance">
-        <input type="text" id="datePicker" name="date_select" class="hidden-date-input">
-        <button type="button" id="openCalendar" class="calendar-btn">📅</button>
+      <button type="button" id="openCal" class="cal-picker-btn">
+        📅 <?= $lang['go_to_date'] ?>
+      </button>
     </form>
+
+  </div>
+
+  <a class="cal-nav-btn" href="?page=calendrier_performance&mois=<?= $ms ?>&annee=<?= $as ?>">→</a>
 
 </div>
 
-<!-- ===============================
-     CALENDRIERS
-=================================-->
-
-<div class="<?= $calendar_view == 'year' ? 'year-grid' : 'calendrier-container' ?>">
+<!-- Calendars -->
+<div class="cal-grid <?= $calendar_view=='year' ? 'year-mode' : '' ?> animate-in">
 
 <?php foreach($mois as $item):
 
     $m = $item['mois'];
-    $annee_affiche = $item['annee'];
+    $y = $item['annee'];
 
-    $premier_jour = mktime(0,0,0,$m,1,$annee_affiche);
-    $nb_jours = date('t', $premier_jour);
-    $nom_mois = date('F', $premier_jour);
+    $first_ts  = mktime(0,0,0,$m,1,$y);
+    $nb_jours  = date('t',$first_ts);
+
+    $day_start = $first_day=='monday'
+        ? date('N',$first_ts)
+        : (date('w',$first_ts)==0?1:date('w',$first_ts)+1);
+
 ?>
 
-<div>
-<h3><?= $nom_mois ?> <?= $annee_affiche ?></h3>
+<div class="cal-month">
 
-<table>
-<tr>
-<?php if($first_day == 'monday'): ?>
-    <th>L</th><th>M</th><th>M</th><th>J</th>
-    <th>V</th><th>S</th><th>D</th>
-<?php else: ?>
-    <th>D</th><th>L</th><th>M</th><th>M</th>
-    <th>J</th><th>V</th><th>S</th>
-<?php endif; ?>
-</tr>
-<tr>
+  <div class="cal-month-title">
+    <?= $mois_noms[$m] ?> <?= $y ?>
+  </div>
+
+  <table class="cal-table">
+
+    <tr>
+
+      <?php if($first_day=='monday'): ?>
+
+        <th>L</th>
+        <th>M</th>
+        <th>M</th>
+        <th>J</th>
+        <th>V</th>
+        <th>S</th>
+        <th>D</th>
+
+      <?php else: ?>
+
+        <th>D</th>
+        <th>L</th>
+        <th>M</th>
+        <th>M</th>
+        <th>J</th>
+        <th>V</th>
+        <th>S</th>
+
+      <?php endif; ?>
+
+    </tr>
+
+    <tr>
 
 <?php
-if($first_day == 'monday'){
-    $jour_semaine = date('N', $premier_jour);
-} else {
-    $jour_semaine = date('w', $premier_jour);
-    if($jour_semaine == 0){
-        $jour_semaine = 1;
-    } else {
-        $jour_semaine++;
-    }
-}
 
-for($i=1; $i<$jour_semaine; $i++){
-    echo "<td></td>";
-}
+for($i=1;$i<$day_start;$i++)
+    echo "<td class='cal-empty'></td>";
 
-for($jour=1; $jour<=$nb_jours; $jour++){
+for($j=1;$j<=$nb_jours;$j++){
 
-    $date_complete = $annee_affiche . "-" .
-        str_pad($m,2,"0",STR_PAD_LEFT) . "-" .
-        str_pad($jour,2,"0",STR_PAD_LEFT);
+    $date = $y.'-'.str_pad($m,2,'0',STR_PAD_LEFT).'-'.str_pad($j,2,'0',STR_PAD_LEFT);
 
-    $class_off = in_array($date_complete, $off_days_db) ? "day-off" : "";
-echo "<td class='$class_off'>";
-    echo "<div class='day-number'>$jour</div>";
+    $isToday = ($date==$today);
+    $isOff   = in_array($date,$off_days_db);
 
-    if($date_complete == $today){
-        echo "<div class='today-dot'></div>";
-    }
+    $cls = ($isToday?'cal-today ':'').($isOff?'cal-day-off':'');
 
-    if(array_key_exists($date_complete, $scores_par_date)){
-        $score = $scores_par_date[$date_complete];
-        $class = $score < 0 ? "score-red" : "score-green";
-        echo "<div class='score-circle $class'>$score</div>";
+    echo "<td class='$cls'>";
+    echo "<span class='cal-day-num'>$j</span>";
+
+    if($isToday)
+        echo "<div class='cal-dot'></div>";
+
+    if(array_key_exists($date,$scores_par_date)){
+
+        $sc = $scores_par_date[$date];
+        $cl = $sc>=0 ? 'green' : 'red';
+
+        echo "<div class='cal-score $cl'>$sc</div>";
     }
 
     echo "</td>";
 
-    if((($jour + $jour_semaine -1) % 7) == 0){
+    if((($j+$day_start-1)%7)==0)
         echo "</tr><tr>";
-    }
 }
+
 ?>
 
-</tr>
-</table>
+    </tr>
+  </table>
+
 </div>
 
 <?php endforeach; ?>
 
 </div>
 
-<!-- ===============================
-     SCRIPT MINI CALENDRIER
-=================================-->
-
 <script>
-document.addEventListener("DOMContentLoaded", function(){
 
-    const dateInput = document.getElementById("datePicker");
-    const button = document.getElementById("openCalendar");
+document.addEventListener('DOMContentLoaded',function(){
 
-    const fp = flatpickr(dateInput, {
-        dateFormat: "Y-m-d",
-        appendTo: button.parentElement,   // IMPORTANT
-        position: "auto center",
-        onChange: function(selectedDates, dateStr) {
-            document.getElementById("dateForm").submit();
-        }
-    });
+  const fp = flatpickr(document.getElementById('datePicker'),{
 
-    button.addEventListener("click", function(){
-        fp.open();
-    });
+    dateFormat:'Y-m-d',
+
+    onChange:function(){
+      document.getElementById('dateForm').submit();
+    }
+
+  });
+
+  document.getElementById('openCal')
+    .addEventListener('click',function(){ fp.open(); });
 
 });
+
 </script>

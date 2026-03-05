@@ -1,237 +1,157 @@
 <?php
 require_once "../lang_init.php";
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
 if(!isset($_SESSION['user_id'])){
-    header("Location: ../auth/login.php");
-    exit();
+  header("Location: ../auth/login.php");
+  exit();
 }
+
 $page = $_GET['page'] ?? 'tableau_bord';
-if(isset($_POST['theme'])){
-    $_SESSION['theme'] = $_POST['theme'];
-}
-if(isset($_POST['taille'])){
-    $_SESSION['taille'] = $_POST['taille'];
-}
 
-
-/* Sécurité : pages autorisées */
 $pages_autorisees = [
-    'tableau_bord',
-    'calendrier_performance',
-    'projets',
-    'projet_courant',
-    'parametres',
-    'profil_utilisateur', 
-    'preferences_affichage',
-    'param_calendrier',
-    'securite_compte',
-    'apropos'
+  'tableau_bord','calendrier_performance','projets','projet_courant',
+  'parametres','profil_utilisateur','preferences_affichage',
+  'param_calendrier','securite_compte','apropos'
 ];
 
-if(!in_array($page, $pages_autorisees)){
-    $page = 'tableau_bord';
+if(!in_array($page,$pages_autorisees)){
+  $page = 'tableau_bord';
 }
+
+$theme  = $_SESSION['theme']  ?? 'light';
+$taille = $_SESSION['taille'] ?? 'normal';
+$lang_code = $_SESSION['lang'] ?? 'fr';
+
+/* classes body */
+$body_classes = [];
+
+if($theme==='dark'){
+  $body_classes[]='dark-mode';
+}
+
+if($taille==='grand'){
+  $body_classes[]='text-large';
+}
+
+$body_class = implode(' ',$body_classes);
 ?>
+
 <!DOCTYPE html>
-<html>
+<html lang="<?= $lang_code ?>">
+
 <head>
-    <title>Dashboard</title>
-    <style>
-       body {
-       margin: 0;
-       font-family: 'Segoe UI', sans-serif;
-   }
-        .sidebar {
-            width: 270px;
-            height: 100vh;
-            background-color: #e53935;
-            position: fixed;
-            padding: 20px;
-            box-sizing: border-box;
-            color: white;
-            display: flex;
-            flex-direction: column;
-        }
 
-        .logo {
-            background: white;
-            padding: 10px;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 20px;
-            color: black;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .profile {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+<title><?= $lang['app_name'] ?></title>
 
-        .profile img {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-        .menu a {
-            display: block;
-            background: #d32f2f;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            color: white;
-            text-decoration: none;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        .menu a:hover {
-            background: #b71c1c;
-        }
+<link rel="stylesheet"
+href="/systeme_pointage/public/assets/css/style.css?v=<?= filemtime('../public/assets/css/style.css') ?>">
 
-        .logout {
-            margin-top: auto;
-        }
-
-        .logout a {
-            display: block;
-            background: #eeeeee;
-            color: black;
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            text-decoration: none;
-        }
-
-        .content {
-            margin-left: 290px;
-            padding: 30px;
-        }
-        .pref-box {
-    background: #dbe6f7;
-    padding: 20px;
-    border-radius: 10px;
-    width: 500px;
-    border: 1px solid #b0c4de;
-}
-
-.pref-box h3 {
-    margin-top: 0;
-}
-body.light {
-    background-color: #f0f2f5;
-    color: #000;
-}
-
-body.dark {
-    background-color: #2b2b2b;   /* plus doux */
-    color: #f1f1f1;
-}
-
-body.dark .sidebar {
-    background-color: #202020;
-}
-
-body.dark .menu a {
-    background-color: #2f2f2f;
-}
-
-body.dark .menu a:hover {
-    background-color: #3a3a3a;
-}
-
-body.dark .pref-box {
-    background: #353535;
-    border: 1px solid #555;
-}
-/* TEXT SIZE */
-body.normal {
-    font-size: 16px;
-}
-
-body.grand {
-    font-size: 20px;
-}
-.modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    width: 350px;
-    text-align: center;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.btn-confirm {
-    background: #2e7d32;
-    color: white;
-    padding: 6px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.btn-cancel {
-    background: #ccc;
-    padding: 6px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
-    </style>
 </head>
-<body class="<?= $_SESSION['theme'] ?? 'light' ?> <?= $_SESSION['taille'] ?? 'normal' ?>">
 
-<div class="sidebar">
+<body class="<?= $body_class ?>">
 
-    <div class="logo">
-        <img src="/img/logocm2e.png" alt="Logo CM2E">
-    </div>
+<div class="app-layout">
 
-    <div class="profile-bar">
-    <img src="/img/metro.jpg" alt="Profile">
-    <div class="profile-info">
-        <h4><?= htmlspecialchars($_SESSION['user_prenom'] . " " . $_SESSION['user_nom']); ?></h4>
-        <small><?= $lang['job_title'] ?></small>
-    </div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+<div class="sidebar-accent"></div>
+
+<div class="sidebar-logo">
+<img src="/systeme_pointage/public/assets/img/logocm2e.jpg" alt="CM2E">
 </div>
 
-    <div class="menu">
-        <a href="?page=tableau_bord"><?= $lang['dashboard'] ?></a>
-        <a href="?page=calendrier_performance"><?= $lang['performance_calendar'] ?></a>
-        <a href="?page=projets"><?= $lang['projects'] ?></a>
-        <a href="?page=projet_courant"><?= $lang['current_project'] ?></a>
-        <a href="?page=parametres"><?= $lang['settings'] ?></a>
-    </div>
+<div class="sidebar-profile">
 
-    <div class="logout">
-        <a href="../auth/logout.php"><?= $lang['logout'] ?></a>
-    </div>
+<?php
+$photo = $_SESSION['user_photo'] ?? null;
+$initiale = strtoupper(substr($_SESSION['user_prenom'] ?? 'U',0,1));
+?>
+
+<div class="sidebar-avatar">
+
+<?php if($photo): ?>
+
+<img src="/systeme_pointage/uploads/<?= htmlspecialchars($photo) ?>?v=<?= time() ?>" alt="Photo">
+
+<?php else: ?>
+
+<span><?= $initiale ?></span>
+
+<?php endif; ?>
 
 </div>
 
-<div class="content">
-    <h2><?= $lang['welcome'] ?> <?= htmlspecialchars($_SESSION['user_prenom']) ?></h2>
+<div class="sidebar-profile-info">
 
-    <?php
-    // Inclusion de la page AU BON ENDROIT
-    include __DIR__ . '/' . $page . '.php';
-    
-    ?>
+<h4><?= htmlspecialchars($_SESSION['user_prenom'].' '.$_SESSION['user_nom']) ?></h4>
+
+<small><?= $lang['job_title'] ?></small>
+
+</div>
+
+</div>
+
+<nav class="sidebar-nav">
+
+<div class="nav-section-label"><?= $lang['nav_main'] ?></div>
+
+<a href="?page=tableau_bord" class="<?= $page==='tableau_bord'?'active':'' ?>">
+<span class="nav-icon">▦</span>
+<?= $lang['dashboard'] ?>
+</a>
+
+<a href="?page=calendrier_performance" class="<?= $page==='calendrier_performance'?'active':'' ?>">
+<span class="nav-icon">📅</span>
+<?= $lang['performance_calendar'] ?>
+</a>
+
+<div class="nav-section-label"><?= $lang['nav_projects'] ?></div>
+
+<a href="?page=projets" class="<?= $page==='projets'?'active':'' ?>">
+<span class="nav-icon">📁</span>
+<?= $lang['projects'] ?>
+</a>
+
+<a href="?page=projet_courant" class="<?= $page==='projet_courant'?'active':'' ?>">
+<span class="nav-icon">▶</span>
+<?= $lang['current_project'] ?>
+</a>
+
+<div class="nav-section-label"><?= $lang['nav_account'] ?></div>
+
+<a href="?page=parametres" class="<?= $page==='parametres'?'active':'' ?>">
+<span class="nav-icon">⚙</span>
+<?= $lang['settings'] ?>
+</a>
+
+</nav>
+
+<div class="sidebar-footer">
+
+<a href="../auth/logout.php">
+<span>⏻</span> <?= $lang['logout'] ?>
+</a>
+
+</div>
+
+</aside>
+
+<!-- MAIN -->
+<main class="main-content">
+
+<?php include __DIR__.'/'.$page.'.php'; ?>
+
+</main>
+
 </div>
 
 </body>

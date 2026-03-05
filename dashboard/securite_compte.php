@@ -3,137 +3,182 @@ require_once "../lang_init.php";
 require_once "../config/database.php";
 
 $user_id = $_SESSION['user_id'] ?? null;
+if(!$user_id){ header("Location: ../auth/login.php"); exit(); }
 
-if(!$user_id){
-    header("Location: ../auth/login.php");
-    exit();
+$msg_type='';
+$msg_text='';
+
+if($_SERVER['REQUEST_METHOD']==='POST'){
+
+  $cur=$_POST['current_password']??'';
+  $new=$_POST['new_password']??'';
+  $conf=$_POST['confirm_password']??'';
+
+  $stmt=$pdo->prepare("SELECT mot_de_passe FROM users WHERE id=?");
+  $stmt->execute([$user_id]);
+  $u=$stmt->fetch(PDO::FETCH_ASSOC);
+
+  if(!$u){
+      $msg_type='error';
+      $msg_text=$lang['user_not_found'];
+  }
+  elseif(!password_verify($cur,$u['mot_de_passe'])){
+      $msg_type='error';
+      $msg_text=$lang['wrong_password'];
+  }
+  elseif($new!==$conf){
+      $msg_type='error';
+      $msg_text=$lang['password_not_match'];
+  }
+  elseif(strlen($new)<6){
+      $msg_type='error';
+      $msg_text=$lang['password_min'];
+  }
+  elseif(password_verify($new,$u['mot_de_passe'])){
+      $msg_type='error';
+      $msg_text=$lang['password_must_different'];
+  }
+  else{
+      $pdo->prepare("UPDATE users SET mot_de_passe=? WHERE id=?")
+          ->execute([password_hash($new,PASSWORD_DEFAULT),$user_id]);
+
+      $msg_type='success';
+      $msg_text=$lang['password_changed'];
+  }
 }
 
-$message = "";
-
-/* =============================
-   UPDATE PASSWORD
-============================= */
-
-if($_SERVER['REQUEST_METHOD'] === 'POST'){
-
-    $current_password = trim($_POST['current_password'] ?? '');
-    $new_password     = trim($_POST['new_password'] ?? '');
-    $confirm_password = trim($_POST['confirm_password'] ?? '');
-
-    // Récupérer mot de passe actuel depuis la base
-    $stmt = $pdo->prepare("SELECT mot_de_passe FROM users WHERE id = ?");
-    $stmt->execute([$user_id]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if(!$user){
-        $message = "<p style='color:red;'>Utilisateur introuvable</p>";
-    }
-
-    // Vérifier mot de passe actuel
-    elseif(!password_verify($current_password, $user['mot_de_passe'])){
-        $message = "<p style='color:red;'>Mot de passe actuel incorrect</p>";
-    }
-
-    // Vérifier confirmation
-    elseif($new_password !== $confirm_password){
-        $message = "<p style='color:red;'>Les nouveaux mots de passe ne correspondent pas</p>";
-    }
-
-    // Vérifier longueur minimale
-    elseif(strlen($new_password) < 6){
-        $message = "<p style='color:red;'>Le mot de passe doit contenir au moins 6 caractères</p>";
-    }
-
-    // Vérifier que le nouveau mot de passe est différent
-    elseif(password_verify($new_password, $user['mot_de_passe'])){
-        $message = "<p style='color:red;'>Le nouveau mot de passe doit être différent de l'ancien</p>";
-    }
-
-    else{
-        $new_hashed = password_hash($new_password, PASSWORD_DEFAULT);
-
-        $stmt = $pdo->prepare("UPDATE users SET mot_de_passe = ? WHERE id = ?");
-        $stmt->execute([$new_hashed, $user_id]);
-
-        $message = "<p style='color:green;'>Mot de passe modifié avec succès</p>";
-    }
-}
-
-/* =============================
-   LAST LOGIN
-============================= */
-
-$stmt = $pdo->prepare("SELECT last_login FROM users WHERE id = ?");
+$stmt=$pdo->prepare("SELECT last_login FROM users WHERE id=?");
 $stmt->execute([$user_id]);
-$user_data = $stmt->fetch(PDO::FETCH_ASSOC);
-
-$last_login = $user_data['last_login'] ?? null;
+$last=$stmt->fetch(PDO::FETCH_ASSOC)['last_login']??null;
 ?>
 
-<h2>
-    <?= $lang['settings'] ?> &gt; 
-    <?= $lang['account_security'] ?? 'Sécurité du compte' ?>
-</h2>
+<div class="page-header animate-in">
+  <div>
+    <h1><?= $lang['account_security'] ?></h1>
+    <div class="page-subtitle"><?= $lang['security_manage'] ?></div>
+  </div>
+</div>
 
-<!-- ================= PASSWORD ================= -->
+<div class="settings-section animate-in">
 
-<div class="pref-box">
+  <div class="settings-section-title">
+    <span class="s-icon">🔒</span><?= $lang['password_section'] ?>
+  </div>
 
-    <h3><?= $lang['password_section'] ?></h3>
+  <?php if($msg_text): ?>
+    <div class="settings-alert <?= $msg_type ?>">
+      <?= $msg_type==='success'?'✓':'✕' ?> <?= htmlspecialchars($msg_text) ?>
+    </div>
+  <?php endif; ?>
 
-    <?= $message ?>
+  <form method="POST">
 
-    <form method="POST" style="margin-top:15px;">
+    <div class="form-group">
+      <label><?= $lang['current_password'] ?></label>
 
-        <input type="password"
-               name="current_password"
-               placeholder="<?= $lang['current_password'] ?>"
-               required
-               style="display:block; margin-bottom:10px; padding:6px; width:300px;">
+      <div class="pw-wrap">
+        <input type="password" name="current_password" placeholder="••••••••" required>
 
-        <input type="password"
-               name="new_password"
-               placeholder="<?= $lang['new_password'] ?>"
-               required
-               style="display:block; margin-bottom:10px; padding:6px; width:300px;">
-
-        <input type="password"
-               name="confirm_password"
-               placeholder="<?= $lang['confirm_password'] ?>"
-               required
-               style="display:block; margin-bottom:15px; padding:6px; width:300px;">
-
-        <button type="submit"
-                style="padding:8px 18px;
-                       border-radius:6px;
-                       border:none;
-                       background:#e53935;
-                       color:white;
-                       cursor:pointer;">
-            <?= $lang['change_password'] ?>
+        <button type="button" class="toggle-password" onclick="tog(this)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5
+                     c4.478 0 8.268 2.943 9.542 7
+                     -1.274 4.057-5.064 7-9.542 7
+                     -4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
         </button>
+      </div>
+    </div>
 
-    </form>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+      <div class="form-group" style="margin-bottom:0">
+
+        <label><?= $lang['new_password'] ?></label>
+
+        <div class="pw-wrap">
+          <input type="password" id="np" name="new_password" placeholder="••••••••" required>
+
+          <button type="button" class="toggle-password" onclick="tog(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                 fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5
+                       c4.478 0 8.268 2.943 9.542 7
+                       -1.274 4.057-5.064 7-9.542 7
+                       -4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+      <div class="form-group" style="margin-bottom:0">
+
+        <label><?= $lang['confirm_password'] ?></label>
+
+        <div class="pw-wrap">
+          <input type="password" id="cp2" name="confirm_password" placeholder="••••••••" required>
+
+          <button type="button" class="toggle-password" onclick="tog(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                 fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5
+                       c4.478 0 8.268 2.943 9.542 7
+                       -1.274 4.057-5.064 7-9.542 7
+                       -4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="save-btn-row">
+      <button type="submit" class="btn-primary" style="width:auto;padding:11px 28px">
+        <?= $lang['change_password'] ?>
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<div class="settings-section animate-in">
+
+  <div class="settings-section-title">
+    <span class="s-icon">🛡️</span><?= $lang['security_sessions'] ?>
+  </div>
+
+  <div class="info-row">
+    <span class="info-label"><?= $lang['last_login'] ?></span>
+
+    <span class="info-value">
+      <?= $last ? date('d/m/Y \à H:i', strtotime($last)) : '<span style="color:var(--text-3)">'.$lang['not_available'].'</span>' ?>
+    </span>
+  </div>
+
+  <div class="info-row">
+    <span class="info-label"><?= $lang['current_session'] ?></span>
+    <span class="info-value"><span class="status-active">● <?= $lang['active'] ?></span></span>
+  </div>
 
 </div>
 
-<br>
-
-<!-- ================= LAST LOGIN ================= -->
-
-<div class="pref-box">
-
-    <h3><?= $lang['security_sessions'] ?></h3>
-
-    <p><strong><?= $lang['last_login'] ?> :</strong></p>
-
-    <?php if($last_login): ?>
-        <p style="color:green; font-weight:bold;">
-            <?= date('d/m/Y - H:i', strtotime($last_login)) ?>
-        </p>
-    <?php else: ?>
-        <p><?= $lang['no_information'] ?></p>
-    <?php endif; ?>
-
-</div>
+<script>
+function tog(btn){
+  const i = btn.closest('.pw-wrap').querySelector('input');
+  i.type = i.type==='password' ? 'text' : 'password';
+}
+</script>

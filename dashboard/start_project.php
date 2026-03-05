@@ -1,5 +1,7 @@
 <?php
 session_start();
+
+require_once "../lang_init.php";
 require_once "../config/database.php";
 
 if(!isset($_SESSION['role']) || $_SESSION['role'] != 'metrologue'){
@@ -22,7 +24,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$project_id, $_SESSION['user_id']]);
 
 if(!$stmt->fetch()){
-    die("Projet invalide.");
+    die($lang['invalid_project']);
 }
 
 // Mettre à jour le projet

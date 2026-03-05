@@ -1,48 +1,113 @@
-<h2>
-    Paramètres &gt; À propos
-</h2>
+<?php require_once "../lang_init.php"; ?>
 
-<h3>CM2E – Système de Pointage</h3>
+<div class="page-header animate-in">
+  <div>
+    <h1><?= $lang['about'] ?></h1>
+    <div class="page-subtitle"><?= $lang['about_subtitle'] ?></div>
+  </div>
+</div>
 
-<p>
-<strong>Version :</strong> 1.0<br>
-<strong>Dernière mise à jour :</strong> Février 2026
-</p>
+<div class="about-grid">
 
-<p>
-Application web destinée aux métrologues industriels.
-Elle permet de gérer les projets, suivre les performances
-et visualiser les résultats sur différentes périodes.
-</p>
+  <!-- Hero -->
+  <div class="about-hero animate-in">
+    <div class="about-logo">
+      <img src="/systeme_pointage/public/assets/img/logocm2e.jpg" alt="CM2E">
+    </div>
 
-<h4>Projet</h4>
-<p>
-Projet réalisé dans le cadre d’un Projet de Fin d’Études.<br>
-Développé par Nedia Messadi – 2026.
-</p>
+    <div class="about-hero-text">
+      <h2><?= $lang['app_name'] ?></h2>
 
-<h4>Contact & Support</h4>
+      <p><?= $lang['app_description'] ?></p>
 
-<p>
-<strong>Adresse :</strong><br>
-Zone Industrielle Sidi Abdelhamid CP 4061,<br>
-Gouvernorat de Sousse
-</p>
+      <span class="about-version">
+        <?= $lang['version'] ?> 1.0 · <?= $lang['february'] ?> 2026
+      </span>
+    </div>
+  </div>
 
-<p>
-<strong>Téléphone :</strong> +216 25 415 000<br>
-<strong>Fax :</strong> +216 73 320 225<br>
-<strong>Email :</strong> saif@cm2e.com.tn
-</p>
+  <!-- Projet -->
+  <div class="settings-section animate-in">
 
-<p>
-<strong>Réseaux sociaux :</strong><br>
+    <div class="settings-section-title">
+      <span class="s-icon">🎓</span><?= $lang['academic_project'] ?>
+    </div>
 
-<a href="https://www.linkedin.com/company/cm2e/?originalSubdomain=tn" target="_blank">
-LinkedIn
-</a><br>
+    <div class="info-row">
+      <span class="info-label"><?= $lang['developed_by'] ?></span>
+      <span class="info-value">Nedia Messadi</span>
+    </div>
 
-<a href="https://www.facebook.com/cm2e.tn/?locale=fr_FR" target="_blank">
-Facebook
-</a>
-</p>
+    <div class="info-row">
+      <span class="info-label"><?= $lang['framework'] ?></span>
+      <span class="info-value"><?= $lang['final_project'] ?></span>
+    </div>
+
+    <div class="info-row">
+      <span class="info-label"><?= $lang['year'] ?></span>
+      <span class="info-value">2026</span>
+    </div>
+
+    <div class="info-row">
+      <span class="info-label"><?= $lang['technology'] ?></span>
+      <span class="info-value">PHP · MySQL · HTML/CSS</span>
+    </div>
+
+  </div>
+
+  <!-- Contact -->
+  <div class="settings-section animate-in">
+
+    <div class="settings-section-title">
+      <span class="s-icon">📍</span><?= $lang['contact_support'] ?>
+    </div>
+
+    <div class="contact-item">
+      <div class="contact-icon">📍</div>
+      <div>
+        <div class="contact-label"><?= $lang['address'] ?></div>
+        <div class="contact-value">
+          Zone Industrielle Sidi Abdelhamid CP 4061, Gouvernorat de Sousse
+        </div>
+      </div>
+    </div>
+
+    <div class="contact-item">
+      <div class="contact-icon">📞</div>
+      <div>
+        <div class="contact-label"><?= $lang['phone'] ?></div>
+        <div class="contact-value">+216 25 415 000</div>
+      </div>
+    </div>
+
+    <div class="contact-item">
+      <div class="contact-icon">📠</div>
+      <div>
+        <div class="contact-label"><?= $lang['fax'] ?></div>
+        <div class="contact-value">+216 73 320 225</div>
+      </div>
+    </div>
+
+    <div class="contact-item">
+      <div class="contact-icon">✉️</div>
+      <div>
+        <div class="contact-label"><?= $lang['email'] ?></div>
+        <div class="contact-value">
+          <a href="mailto:saif@cm2e.com.tn">saif@cm2e.com.tn</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="social-row">
+      <a href="https://www.linkedin.com/company/cm2e/?originalSubdomain=tn"
+         target="_blank"
+         class="social-btn">🔗 <?= $lang['linkedin'] ?></a>
+
+      <a href="https://www.facebook.com/cm2e.tn/?locale=fr_FR"
+         target="_blank"
+         class="social-btn">👍 <?= $lang['facebook'] ?></a>
+    </div>
+
+  </div>
+
+</div>
