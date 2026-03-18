@@ -32,7 +32,7 @@ if($user && password_verify($password, $user['mot_de_passe'])){
     $stmt2->execute([$user['id']]);
 
     if($user['role'] == 'admin'){
-        header("Location: ../admin_gerant/dashboard.php");
+        header("Location: ../admin_gerant/dashboard_gerant.php");
     } else {
         header("Location: ../dashboard/index.php");
     }
