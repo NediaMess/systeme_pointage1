@@ -359,7 +359,6 @@ input,select,textarea{font-family:inherit}
       <div class="tb-conn">Plateforme métrologue connectée</div>
       <button class="tb-btn" onclick="openChamp()">🏅 Résultat trimestriel</button>
       <button class="tb-btn prim" onclick="openAddProj()">＋ Nouveau projet</button>
-      <button class="notif">🔔<div class="notif-dot"></div></button>
     </div>
   </div>
 
@@ -369,46 +368,41 @@ input,select,textarea{font-family:inherit}
       <div class="sc sc-r"><div class="sc-accent"></div><div class="sc-ico">📁</div><div class="sc-val" id="st-projets">—</div><div class="sc-lbl">Projets actifs</div></div>
       <div class="sc sc-g"><div class="sc-accent"></div><div class="sc-ico">🔧</div><div class="sc-val" id="st-metros">—</div><div class="sc-lbl">Métrologues actifs</div></div>
       <div class="sc sc-o"><div class="sc-accent"></div><div class="sc-ico">✅</div><div class="sc-val" id="st-taches">—</div><div class="sc-lbl">Tâches terminées</div></div>
-      <div class="sc sc-b"><div class="sc-accent"></div><div class="sc-ico">⚠️</div><div class="sc-val" id="st-abs">—</div><div class="sc-lbl">Absences aujourd'hui</div></div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="card-hd"><div class="card-title">📅 Planning de la semaine</div></div>
-      <div style="overflow-x:auto">
-        <table class="tbl"><thead><tr>
-          <th style="min-width:150px">Métrologue</th>
-          <th class="dc">Lun</th><th class="dc">Mar</th><th class="dc">Mer</th><th class="dc">Jeu</th><th class="dc">Ven</th>
-          <th>Score</th>
-        </tr></thead><tbody id="plan-mini"><tr><td colspan="7" class="loading"><div class="spin"></div>Chargement...</td></tr></tbody></table>
-      </div>
     </div>
     <div class="two-col">
-      <div class="card">
-        <div class="card-hd"><div class="card-title">🏆 Top 3 — Trimestre en cours</div></div>
-        <div class="card-body" id="dash-podium"><div class="loading"><div class="spin"></div></div></div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-title">⏱ Fin de trimestre</div></div>
-        <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
-          <div class="timer-cd">
-            <div class="timer-lbl">Temps restant</div>
-            <div class="timer-digs">
-              <div class="t-unit"><div class="t-num" id="td1">—</div><div class="t-ulbl">Jours</div></div>
-              <div class="t-sep">:</div>
-              <div class="t-unit"><div class="t-num" id="th1">—</div><div class="t-ulbl">H</div></div>
-              <div class="t-sep">:</div>
-              <div class="t-unit"><div class="t-num" id="tm1">—</div><div class="t-ulbl">Min</div></div>
-            </div>
-          </div>
-          <div>
-            <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--txt2);margin-bottom:4px"><span>Trimestre <?= ceil(date('n')/3) ?> — <?= date('Y') ?></span><span style="color:var(--red);font-weight:700" id="trim-pct">68%</span></div>
-            <div class="pbar-bg"><div class="pbar-fill" id="trim-bar" style="width:68%"></div></div>
-          </div>
-          <div style="background:var(--ybg);border:1px solid rgba(217,119,6,.2);border-radius:8px;padding:10px;font-size:12px" id="leader-badge">🏅 Chargement...</div>
-          <button class="fb prim" style="justify-content:center" onclick="openChamp()">🎉 Résultat trimestriel</button>
+  <!-- Carte gauche : Top 3 -->
+  <div class="card">
+    <div class="card-hd"><div class="card-title">🏆 Top 3 — Trimestre en cours</div></div>
+    <div class="card-body" id="dash-podium">
+      <div id="podium-content" style="display:none"></div>
+      <div id="podium-timer" style="text-align:center;padding:20px">
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:10px">Résultat disponible dans</div>
+        <div class="timer-digs" style="justify-content:center">
+          <div class="t-unit"><div class="t-num" id="td3">—</div><div class="t-ulbl">Jours</div></div>
+          <div class="t-sep">:</div>
+          <div class="t-unit"><div class="t-num" id="th3">—</div><div class="t-ulbl">H</div></div>
+          <div class="t-sep">:</div>
+          <div class="t-unit"><div class="t-num" id="tm3">—</div><div class="t-ulbl">Min</div></div>
         </div>
       </div>
     </div>
   </div>
+  <!-- Carte droite : Fin de trimestre -->
+  <div class="card">
+    <div class="card-hd"><div class="card-title">⏱ Fin de trimestre</div></div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--txt2);margin-bottom:4px">
+          <span>Trimestre <?= ceil(date('n')/3) ?> — <?= date('Y') ?></span>
+          <span style="color:var(--red);font-weight:700" id="trim-pct">68%</span>
+        </div>
+        <div class="pbar-bg"><div class="pbar-fill" id="trim-bar" style="width:68%"></div></div>
+      </div>
+      <div style="background:var(--ybg);border:1px solid rgba(217,119,6,.2);border-radius:8px;padding:10px;font-size:12px" id="leader-badge">🏅 Chargement...</div>
+      <button class="fb prim" style="justify-content:center" onclick="openChamp()">🎉 Résultat trimestriel</button>
+    </div>
+  </div>
+</div>
 
   <!-- ── PLANNING ── -->
   <div class="sec" id="sec-planning">
@@ -710,16 +704,6 @@ input,select,textarea{font-family:inherit}
         <div class="fg"><label class="fl">Échéance</label><input class="fi" type="date" id="p-deadline"/></div>
         <div class="fg"><label class="fl">Priorité</label><select class="fi" id="p-prio"><option value="normale">Normale</option><option value="haute">Haute</option><option value="urgente">Urgente</option></select></div>
       </div>
-      <div class="tasks-prev">
-        <div class="tp-title">📋 Tâches créées automatiquement</div>
-        <div class="tasks-4">
-          <div class="t4 chip-F"><div class="t4-n">1</div>Finaliser</div>
-          <div class="t4 chip-V"><div class="t4-n">2</div>Vérifier</div>
-          <div class="t4 chip-C"><div class="t4-n">3</div>Commande</div>
-          <div class="t4 chip-R"><div class="t4-n">4</div>Réception</div>
-        </div>
-        <div style="font-size:10.5px;color:var(--txt3);margin-top:6px">+50 pts par tâche complétée par le métrologue</div>
-      </div>
       <div class="fg" style="margin-top:11px"><label class="fl">Description</label><textarea class="fi" id="p-desc" rows="2" placeholder="Détails..." style="resize:vertical"></textarea></div>
     </div>
     <div class="modal-foot">
@@ -815,13 +799,13 @@ function showSec(id,el){
   if(el)el.classList.add('active');
   const t={dashboard:'Tableau de bord',planning:'Planning Hebdomadaire',scores:'Scores & Classement',metrologues:'Gestion des Métrologues',projets:'Gestion des Projets',pointages:'Consultation des Pointages',donnees:'Gestion des Données',parametres:'Paramètres',securite:'Sécurité & Accès',systeme:'Gestion du système'};
   document.getElementById('page-title').textContent=t[id]||id;
-  // Lazy load
   if(id==='metrologues'&&!loaders.metrologues){loaders.metrologues=true;loadMetros();}
   if(id==='projets'&&!loaders.projets){loaders.projets=true;loadProjets();}
-  if((id==='scores')&&!loaders.scores){loaders.scores=true;loadScores();}
+  if(id==='scores'&&!loaders.scores){loaders.scores=true;loadScores();}
   if(id==='pointages'&&!loaders.pointages){loaders.pointages=true;loadPointages();}
   if(id==='parametres'&&!loaders.horaires){loaders.horaires=true;loadHoraires();}
   if(id==='securite'&&!loaders.journal){loaders.journal=true;loadJournal();}
+  if(id==='planning') loadPlanning();
 }
 
 /* ═══════════════════════════
@@ -833,7 +817,6 @@ async function loadDashboard(){
     document.getElementById('st-projets').textContent=s.projets_actifs||0;
     document.getElementById('st-metros').textContent=s.metrologues||0;
     document.getElementById('st-taches').textContent=s.taches_done||0;
-    document.getElementById('st-abs').textContent=s.absences||0;
   }catch(e){console.error('Stats:',e)}
 
   try{
@@ -844,7 +827,7 @@ async function loadDashboard(){
       document.getElementById('dash-podium').innerHTML='<div style="text-align:center;padding:20px;color:#9AA3B7">Aucun score</div>';
       return;
     }
-    buildPlanMini(metros);
+
     buildDashPodium(metros);
     buildLeaderBadge(metros);
     const sel=document.getElementById('p-metro');
@@ -855,7 +838,7 @@ async function loadDashboard(){
     });
   }catch(e){
     console.error('Metros:', e);
-    document.getElementById('plan-mini').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:#E31E24">Erreur: '+e.message+'</td></tr>';
+    if(document.getElementById('plan-mini')) document.getElementById('plan-mini').innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:#E31E24">Erreur: '+e.message+'</td></tr>';
   }
 }
 
@@ -878,16 +861,24 @@ function buildPlanMini(metros){
 
 function buildDashPodium(metros){
   const s=[...metros].sort((a,b)=>b.score-a.score);
-  const mx=s[0]?.score||1;
-  const pod=document.getElementById('dash-podium');
-  if(s.length>=3){
-    pod.innerHTML=`<div class="podium">
-      <div class="pp pp2"><div class="pa-w"><div class="pp-av" style="width:40px;height:40px">${ini(s[1]?.name)}</div><div class="pp-crown">🥈</div></div><div class="pp-name">${(s[1]?.name||'').split(' ')[0]}</div><div class="pp-pts">${s[1]?.score||0}</div><div class="pp-bar">2ème</div></div>
-      <div class="pp pp1"><div class="pa-w"><div class="pp-av" style="width:46px;height:46px">${ini(s[0]?.name)}</div><div class="pp-crown">👑</div></div><div class="pp-name">${(s[0]?.name||'').split(' ')[0]}</div><div class="pp-pts">${s[0]?.score||0}</div><div class="pp-bar">1er</div></div>
-      <div class="pp pp3"><div class="pa-w"><div class="pp-av" style="width:36px;height:36px">${ini(s[2]?.name)}</div><div class="pp-crown">🥉</div></div><div class="pp-name">${(s[2]?.name||'').split(' ')[0]}</div><div class="pp-pts">${s[2]?.score||0}</div><div class="pp-bar">3ème</div></div>
-    </div>`;
+  const published=<?= isset($_SESSION['champion']['published']) && $_SESSION['champion']['published'] ? 'true' : 'false' ?>;
+  const podTimer=document.getElementById('podium-timer');
+  const podContent=document.getElementById('podium-content');
+  if(published && s.length>=1){
+    if(podTimer) podTimer.style.display='none';
+    if(podContent) podContent.style.display='block';
+    if(podContent){
+      podContent.innerHTML=s.slice(0,3).map((m,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr)">
+         <div style="font-size:18px">${['🥇','🥈','🥉'][i]}</div>
+         <div style="flex:1;font-weight:600;font-size:13px">${m.name}</div>
+         <div style="font-weight:800;font-size:15px;color:var(--gold);font-family:'DM Mono',monospace">${m.score||0} pts</div>
+        </div>`).join('');
+}
+  } else {
+    if(podTimer) podTimer.style.display='block';
+    if(podContent) podContent.style.display='none';
   }
-  // champion data
   if(s[0]){
     document.getElementById('champ-name').textContent=s[0].name;
     document.getElementById('champ-score').textContent=s[0].score||0;
@@ -898,7 +889,7 @@ function buildDashPodium(metros){
 function buildLeaderBadge(metros){
   const s=[...metros].sort((a,b)=>b.score-a.score);
   const lb=document.getElementById('leader-badge');
-  if(s[0]) lb.innerHTML=`🏅 <strong style="color:var(--gold)">Leader :</strong> ${s[0].name} — <strong style="color:var(--gold)">${s[0].score||0} pts</strong>`;
+  if(lb && s[0]) lb.innerHTML=`🏅 <strong style="color:var(--gold)">Leader :</strong> ${s[0].name} — <strong style="color:var(--gold)">${s[0].score||0} pts</strong>`;
 }
 
 /* ═══════════════════════════
@@ -1048,7 +1039,21 @@ async function loadProjets(){
   }catch(e){toast('err','Erreur projets : '+e.message)}
 }
 
-function openAddProj(){openOv('ov-addproj')}
+async function openAddProj(){
+  const sel=document.getElementById('p-metro');
+  if(sel.options.length<=1){
+    try{
+      const metros=await api('metrologues_list');
+      metros.forEach(m=>{
+        const o=document.createElement('option');
+        o.value=m.id;
+        o.textContent=m.name;
+        sel.appendChild(o);
+      });
+    }catch(e){}
+  }
+  openOv('ov-addproj');
+}
 async function saveProj(){
   const data={
     title:document.getElementById('p-nom').value.trim(),
@@ -1253,6 +1258,9 @@ function tick(){
   ['td1','td2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=f(d)});
   ['th1','th2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=f(h)});
   ['tm1','tm2'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=f(mn)});
+  ['td3'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=f(d)});
+  ['th3'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=f(h)});
+  ['tm3'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=f(mn)});
   // Progress bar
   const startMonth=[0,3,6,9][q-1];
   const start=new Date(now.getFullYear(),startMonth,1);
@@ -1266,6 +1274,42 @@ setInterval(tick,1000);tick();
 /* ═══════════════════════════
    INIT
 ═══════════════════════════ */
+async function loadPlanning(){
+  console.log('loadPlanning appelée');
+  try{
+    console.log('avant api call');
+    const metros=await api('metrologues_list');
+    console.log('metros reçus:', metros.length);
+    const tasks=['Finaliser','Vérifier','Commande','Réception',null,null,'Absent'];
+    const b=document.getElementById('plan-full');
+    console.log('plan-full element:', b);
+    if(!b) return;
+    if(metros.length===0){
+  b.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:#9AA3B7">Aucun métrologue</td></tr>';
+  return;
+}
+const tasksList=['Finaliser','Vérifier','Commande','Réception',null,null,'Absent'];
+const TMAP={Finaliser:'F',Vérifier:'V',Commande:'C',Réception:'R',Absent:'A'};
+b.innerHTML=metros.map(m=>{
+  const col=color(m.id);
+  const days=[0,1,2,3,4].map(()=>{
+    const t=tasksList[Math.floor(Math.random()*tasksList.length)];
+    return`<td style="text-align:center">${t?`<span class="chip chip-${TMAP[t]||'e'}">${t}</span>`:'<span class="chip chip-e">—</span>'}</td>`;
+  }).join('');
+  return`<tr>
+    <td><div style="display:flex;align-items:center;gap:8px">
+      <div class="ava" style="background:${col}18;color:${col}">${ini(m.name)}</div>
+      <div style="font-weight:600;font-size:12px">${m.name}</div>
+    </div></td>
+    ${days}
+    <td><span style="font-weight:800;font-size:13px;color:var(--gold)">${m.score||0}</span></td>
+    <td><button class="fb sec" style="padding:3px 8px;font-size:11px" onclick="openMetroModal(${m.id})">👁 Voir</button></td>
+  </tr>`;
+}).join('');
+console.log('HTML injecté dans plan-full');
+  }catch(e){console.error('Planning:',e)}
+}
+
 loadDashboard();
 </script>
 </body>

@@ -25,15 +25,15 @@ try {
             $stats = [];
 
             $stats['projets_actifs'] = $pdo->query(
-                "SELECT COUNT(*) FROM projects WHERE status='in_progress' OR statut='en_cours'"
+                "SELECT COUNT(*) FROM projects WHERE statut='en_cours'"
             )->fetchColumn();
 
             $stats['metrologues'] = $pdo->query(
-                "SELECT COUNT(*) FROM users WHERE role='metrologue' AND is_active=1"
+                "SELECT COUNT(DISTINCT user_id) FROM projects WHERE statut='en_cours'"
             )->fetchColumn();
 
             $stats['taches_done'] = $pdo->query(
-                "SELECT COUNT(*) FROM steps WHERE status='done'"
+                "SELECT COUNT(*) FROM daily_scores WHERE date_score=CURDATE() AND score > 0"
             )->fetchColumn();
 
             $today = date('Y-m-d');
@@ -297,13 +297,10 @@ try {
                 jsonResponse(['error' => 'Titre et métrologue obligatoires'], 400);
 
             $pdo->beginTransaction();
-
-            $ins = $pdo->prepare("
-                INSERT INTO projects
-                    (nom_projet, user_id, assigned_to, statut, status, date_fin, description, priority, date_creation)
-                VALUES (?, ?, ?, 'en_cours', 'in_progress', ?, ?, ?, NOW())
-            ");
-            $ins->execute([
+            $ins = $pdo->prepare("INSERT INTO projects 
+               (nom_projet, user_id, assigned_to, statut, status, date_fin, description, priority, date_creation) 
+               VALUES (?,?,?,'en_attente','pending',?,?,?,NOW())");        
+                $ins->execute([
                 $title, $metroId, $metroId,
                 $data['deadline']    ?? null,
                 $data['description'] ?? '',
