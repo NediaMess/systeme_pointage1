@@ -6,6 +6,22 @@
 
   <link rel="stylesheet" href="css/style.css">
 </head>
+<?php
+session_start();
+require_once "../config/database.php";
+
+// Vérif auth — role admin
+if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
+    header('Location: ../auth/login.php');
+    exit;
+}
+
+// Infos admin connecté
+$stmt = $pdo->prepare("SELECT CONCAT(prenom,' ',nom) AS name FROM users WHERE id=?");
+$stmt->execute([$_SESSION['user_id']]);
+$adminRow = $stmt->fetch(PDO::FETCH_ASSOC);
+$userName = $adminRow['name'] ?? ($_SESSION['user_name'] ?? 'Admin');
+?>
 <div class="toasts" id="toasts"></div>
 <body>
 
@@ -100,10 +116,6 @@
     loadJournal();
   }
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", ()=>{
-  loadJournal();
-});
-</script>
+
 </body>
 </html>

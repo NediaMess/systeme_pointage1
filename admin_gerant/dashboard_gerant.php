@@ -176,32 +176,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
   loadDashboard();
 });
 </script>
-<div class="overlay" id="ov-addproj">
-  <div class="modal">
-    <div class="modal-hd">
-      <div>📁 Nouveau Projet</div>
-      <button onclick="closeOv('ov-addproj')">✕</button>
-    </div>
 
-    <div class="modal-body">
-      <input id="p-nom" placeholder="Nom projet"><br><br>
-      <select id="p-metro"></select><br><br>
-      <input type="date" id="p-deadline"><br><br>
+<?php include 'components/modal-projet.php'; ?>
+<?php include 'components/modal-score.php'; ?>
 
-      <select id="p-prio">
-        <option value="normale">Normale</option>
-        <option value="haute">Haute</option>
-      </select><br><br>
-
-      <textarea id="p-desc" placeholder="Description"></textarea>
-    </div>
-
-    <div class="modal-foot">
-      <button onclick="saveProj()" style="background:#E31E24;color:white;border:none;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer">
-  Créer
-</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>

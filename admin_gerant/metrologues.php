@@ -44,7 +44,7 @@
 <script>
   // ✅ charger les métrologues seulement ici
   if(document.getElementById('metro-grid')){
-    loadMetrologues();
+    loadMetros();
   }
 </script>
 

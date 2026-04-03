@@ -106,10 +106,8 @@
     loadScores();
   }
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", ()=>{
-  loadScores();
-});
-</script>
+
+<?php include 'components/modal-score.php'; ?>
+
 </body>
 </html>

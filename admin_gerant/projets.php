@@ -51,5 +51,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 });
 </script>
 
+<?php include 'components/modal-projet.php'; ?>
+
 </body>
 </html>

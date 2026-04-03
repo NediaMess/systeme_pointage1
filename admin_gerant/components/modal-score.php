@@ -1,4 +1,3 @@
-<?php include 'components/modal-score.php'; ?>
 <!-- CHAMPION -->
 <div class="champ-ov" id="ov-champ">
   <div class="conf-c" id="conf-c"></div>
