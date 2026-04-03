@@ -14,7 +14,6 @@ if (empty($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'admin') {
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 $uid    = (int)$_SESSION['user_id'];
-
 try {
     switch ($action) {
 

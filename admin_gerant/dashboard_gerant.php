@@ -299,6 +299,21 @@ input,select,textarea{font-family:inherit}
 .loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--txt3);font-size:13px;gap:8px}
 .spin{width:18px;height:18px;border:2px solid var(--bdr);border-top-color:var(--red);border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.overlay {
+  display: none !important;
+}
+
+.overlay.open {
+  display: flex !important;
+}
+
+.champ-ov {
+  display: none !important;
+}
+
+.champ-ov.open {
+  display: flex !important;
+}
 </style>
 </head>
 <body>
@@ -324,22 +339,22 @@ input,select,textarea{font-family:inherit}
   <nav class="sb-nav">
     <div class="sb-section">
       <div class="sb-label">Vue générale</div>
-      <div class="nav-item active" onclick="showSec('dashboard',this)"><span class="nav-ico">📊</span>Tableau de bord <span class="nav-dot"></span></div>
-      <div class="nav-item" onclick="showSec('planning',this)"><span class="nav-ico">📅</span>Planning semaine</div>
-      <div class="nav-item" onclick="showSec('scores',this)"><span class="nav-ico">🏆</span>Scores &amp; Classement <span class="nav-badge">T<?= ceil(date('n')/3) ?></span></div>
+      <div class="nav-item active" onclick="showSec('dashboard',this); return false;"><span class="nav-ico">📊</span>Tableau de bord <span class="nav-dot"></span></div>
+      <div class="nav-item" onclick="showSec('planning',this); return false;"><span class="nav-ico">📅</span>Planning semaine</div>
+      <div class="nav-item" onclick="showSec('scores',this); return false;"><span class="nav-ico">🏆</span>Scores &amp; Classement <span class="nav-badge">T<?= ceil(date('n')/3) ?></span></div>
     </div>
     <div class="sb-section">
       <div class="sb-label">Gestion</div>
-      <div class="nav-item" onclick="showSec('metrologues',this)"><span class="nav-ico">🔧</span>Métrologues</div>
-      <div class="nav-item" onclick="showSec('projets',this)"><span class="nav-ico">📁</span>Projets</div>
-      <div class="nav-item" onclick="showSec('pointages',this)"><span class="nav-ico">🕐</span>Pointages</div>
+      <div class="nav-item" onclick="showSec('metrologues',this); return false;"><span class="nav-ico">🔧</span>Métrologues</div>
+      <div class="nav-item" onclick="showSec('projets',this); return false;"><span class="nav-ico">📁</span>Projets</div>
+      <div class="nav-item" onclick="showSec('pointages',this); return false;"><span class="nav-ico">🕐</span>Pointages</div>
     </div>
     <div class="sb-section">
       <div class="sb-label">Administration</div>
-      <div class="nav-item" onclick="showSec('donnees',this)"><span class="nav-ico">💾</span>Données</div>
-      <div class="nav-item" onclick="showSec('parametres',this)"><span class="nav-ico">⚙️</span>Paramètres</div>
-      <div class="nav-item" onclick="showSec('securite',this)"><span class="nav-ico">🔐</span>Sécurité</div>
-      <div class="nav-item" onclick="showSec('systeme',this)"><span class="nav-ico">🖥️</span>Système</div>
+      <div class="nav-item" onclick="showSec('donnees',this); return false;"><span class="nav-ico">💾</span>Données</div>
+      <div class="nav-item" onclick="showSec('parametres',this); return false;"><span class="nav-ico">⚙️</span>Paramètres</div>
+      <div class="nav-item" onclick="showSec('securite',this); return false;"><span class="nav-ico">🔐</span>Sécurité</div>
+      <div class="nav-item" onclick="showSec('systeme',this); return false;"><span class="nav-ico">🖥️</span>Système</div>
     </div>
   </nav>
   <div class="sb-foot">
@@ -411,11 +426,28 @@ input,select,textarea{font-family:inherit}
     </div>
     <div class="card">
       <div style="overflow-x:auto">
-        <table class="tbl"><thead><tr>
-          <th style="min-width:155px">Métrologue</th>
-          <th class="dc">Lun</th><th class="dc">Mar</th><th class="dc">Mer</th><th class="dc">Jeu</th><th class="dc">Ven</th>
-          <th>Score</th><th>Action</th>
-        </tr></thead><tbody id="plan-full"><tr><td colspan="8" class="loading"><div class="spin"></div></td></tr></tbody></table>
+        <table class="tbl">
+  <thead>
+    <tr>
+      <th style="min-width:155px">Métrologue</th>
+      <th class="dc">Lun</th>
+      <th class="dc">Mar</th>
+      <th class="dc">Mer</th>
+      <th class="dc">Jeu</th>
+      <th class="dc">Ven</th>
+      <th>Score</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+
+  <tbody id="plan-full">
+    <tr>
+      <td colspan="8" class="loading">
+        <div class="spin"></div>
+      </td>
+    </tr>
+  </tbody>
+</table>
       </div>
     </div>
   </div>
@@ -570,7 +602,7 @@ input,select,textarea{font-family:inherit}
       <div class="param-card">
         <div class="pc-title">👤 Modifier le profil admin</div>
         <div class="fg"><label class="fl">Nom complet</label><input class="fi" id="sec-name" value="<?= htmlspecialchars($userName) ?>"/></div>
-        <div class="fg"><label class="fl">Email / Identifiant</label><input class="fi" id="sec-email" value="<?= htmlspecialchars($user['user_email'] ?? '') ?>"/></div>
+        <div class="fg"><label class="fl">Email / Identifiant</label><input class="fi" id="sec-email" value="<?= htmlspecialchars($adminRow['name'] ?? '') ?>"/></div>
         <button class="fb prim" onclick="saveProfile()">💾 Mettre à jour</button>
       </div>
       <div class="param-card">
@@ -760,6 +792,32 @@ input,select,textarea{font-family:inherit}
 <div class="toasts" id="toasts"></div>
 
 <script>
+  async function api(action, data=null, method='GET'){
+  const url = 'api.php?action=' + action;
+
+  const opts = {
+    method: method || (data ? 'POST' : 'GET'),
+    headers: { 'Content-Type': 'application/json' }
+  };
+
+  if (data) opts.body = JSON.stringify(data);
+
+  const r = await fetch(url, opts);
+
+  const text = await r.text();
+
+  let j;
+  try {
+    j = JSON.parse(text);
+  } catch (e) {
+    console.error("Réponse API invalide :", text);
+    throw new Error("API retourne du HTML ou erreur PHP");
+  }
+
+  if (j.error) throw new Error(j.error);
+
+  return j;
+}
 /* ═══════════════════════════
    HELPERS
 ═══════════════════════════ */
@@ -768,17 +826,6 @@ function ini(name){return (name||'').split(' ').map(w=>w[0]||'').join('').slice(
 function color(id){return COLORS[(id-1)%COLORS.length]||COLORS[0]}
 function chip(task){const m={Finaliser:'F',Vérifier:'V',Commande:'C',Réception:'R'};const c=m[task]||'A';return`<span class="chip chip-${c}">${task}</span>`}
 function chipStatus(s){const m={in_progress:'prog',done:'done',pending:'wait'};const l={in_progress:'En cours',done:'Terminé',pending:'En attente'};return`<span class="chip chip-${m[s]||'e'}">${l[s]||s}</span>`}
-
-async function api(action,data=null,method='GET'){
-  const url='api.php?action='+action;
-  const opts={method:method||( data?'POST':'GET'),headers:{'Content-Type':'application/json'}};
-  if(data)opts.body=JSON.stringify(data);
-  const r=await fetch(url,opts);
-  const j=await r.json();
-  if(j.error)throw new Error(j.error);
-  return j;
-}
-
 function toast(type,msg){
   const icons={ok:'✅',info:'ℹ️',warn:'⚠️',err:'❌'};
   const t=document.createElement('div');
@@ -791,20 +838,23 @@ function toast(type,msg){
 /* ═══════════════════════════
    NAV
 ═══════════════════════════ */
-const loaders={metrologues:false,projets:false,scores:false,pointages:false,horaires:false,journal:false};
 function showSec(id,el){
+  console.log("Switch to:", id); // 👈 AJOUT ICI
+
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
   if(el)el.classList.add('active');
+
   const t={dashboard:'Tableau de bord',planning:'Planning Hebdomadaire',scores:'Scores & Classement',metrologues:'Gestion des Métrologues',projets:'Gestion des Projets',pointages:'Consultation des Pointages',donnees:'Gestion des Données',parametres:'Paramètres',securite:'Sécurité & Accès',systeme:'Gestion du système'};
   document.getElementById('page-title').textContent=t[id]||id;
-  if(id==='metrologues'&&!loaders.metrologues){loaders.metrologues=true;loadMetros();}
-  if(id==='projets'&&!loaders.projets){loaders.projets=true;loadProjets();}
-  if(id==='scores'&&!loaders.scores){loaders.scores=true;loadScores();}
-  if(id==='pointages'&&!loaders.pointages){loaders.pointages=true;loadPointages();}
-  if(id==='parametres'&&!loaders.horaires){loaders.horaires=true;loadHoraires();}
-  if(id==='securite'&&!loaders.journal){loaders.journal=true;loadJournal();}
+
+  if(id==='metrologues') loadMetros();
+  if(id==='projets') loadProjets();
+  if(id==='scores') loadScores();
+  if(id==='pointages') loadPointages();
+  if(id==='parametres') loadHoraires();
+  if(id==='securite') loadJournal();
   if(id==='planning') loadPlanning();
 }
 
@@ -845,24 +895,17 @@ async function loadDashboard(){
 function buildPlanMini(metros){
   const tasks=['Finaliser','Vérifier','Commande','Réception',null,null,'Absent'];
   const b=document.getElementById('plan-mini');
+  if(!b) return;
   b.innerHTML=metros.slice(0,6).map(m=>{
     const ini_=ini(m.name);const col=color(m.id);
     const days=[0,1,2,3,4].map(()=>{const t=tasks[Math.floor(Math.random()*tasks.length)];return t?chip(t):'<span class="chip chip-e">—</span>';}).join('');
     return`<tr><td><div style="display:flex;align-items:center;gap:8px"><div class="ava" style="background:${col}18;color:${col}">${ini_}</div><div><div style="font-weight:600;font-size:12px"><button class="ml-btn" onclick="openMetroModal(${m.id})">${m.name}</button></div></div></div></td>${days.split('</span>').filter(Boolean).map(d=>`<td class="dc">${d}</span></td>`).join('')}<td><span style="font-weight:800;font-size:13px;color:var(--gold);font-family:'DM Mono',monospace">${m.score||0}</span></td></tr>`;
   }).join('');
-  // Also build full planning table
-  const bf=document.getElementById('plan-full');
-  if(bf) bf.innerHTML=metros.map(m=>{
-    const ini_=ini(m.name);const col=color(m.id);
-    const days=[0,1,2,3,4].map(()=>{const t=tasks[Math.floor(Math.random()*tasks.length)];return`<td class="dc">${t?chip(t):'<span class="chip chip-e">—</span>'}</td>`;}).join('');
-    return`<tr><td><div style="display:flex;align-items:center;gap:8px"><div class="ava" style="background:${col}18;color:${col}">${ini_}</div><div style="font-weight:600;font-size:12px"><button class="ml-btn" onclick="openMetroModal(${m.id})">${m.name}</button></div></div></td>${days}<td><span style="font-weight:800;font-size:13px;color:var(--gold);font-family:'DM Mono',monospace">${m.score||0}</span></td><td><button class="fb sec" style="padding:3px 8px;font-size:11px" onclick="openMetroModal(${m.id})">👁 Voir</button></td></tr>`;
-  }).join('');
 }
 
 function buildDashPodium(metros){
   const s=[...metros].sort((a,b)=>b.score-a.score);
-  const published=<?= isset($_SESSION['champion']['published']) && $_SESSION['champion']['published'] ? 'true' : 'false' ?>;
-  const podTimer=document.getElementById('podium-timer');
+  const published = <?= json_encode($_SESSION['champion']['published'] ?? false); ?>;  const podTimer=document.getElementById('podium-timer');
   const podContent=document.getElementById('podium-content');
   if(published && s.length>=1){
     if(podTimer) podTimer.style.display='none';
@@ -1284,10 +1327,28 @@ async function loadPlanning(){
     const b=document.getElementById('plan-full');
     console.log('plan-full element:', b);
     if(!b) return;
-    if(metros.length===0){
+    if(!metros || metros.length===0){
   b.innerHTML='<tr><td colspan="8" style="text-align:center;padding:20px;color:#9AA3B7">Aucun métrologue</td></tr>';
   return;
 }
+let html = '';
+
+metros.forEach(m => {
+  html += `
+    <tr>
+      <td>${m.name}</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>✔</td>
+      <td>${m.score || 0}</td>
+      <td><button>Voir</button></td>
+    </tr>
+  `;
+});
+
+b.innerHTML = html;
 const tasksList=['Finaliser','Vérifier','Commande','Réception',null,null,'Absent'];
 const TMAP={Finaliser:'F',Vérifier:'V',Commande:'C',Réception:'R',Absent:'A'};
 b.innerHTML=metros.map(m=>{
