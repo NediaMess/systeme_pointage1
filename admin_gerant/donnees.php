@@ -91,5 +91,7 @@
 <!-- 🔥 JS -->
 <script src="js/script.js"></script>
 
+<?php include 'components/modal-score.php'; ?>
+
 </body>
 </html>

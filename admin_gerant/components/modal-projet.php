@@ -1,4 +1,3 @@
-<?php include 'components/modal-projet.php'; ?>
 <!-- MODAL AJOUTER PROJET -->
 <div class="overlay" id="ov-addproj">
   <div class="modal modal-md">

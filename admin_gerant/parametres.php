@@ -100,10 +100,8 @@
     loadHoraires();
   }
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", ()=>{
-  loadHoraires();
-});
-</script>
+
+<?php include 'components/modal-score.php'; ?>
+
 </body>
 </html>

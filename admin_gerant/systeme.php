@@ -111,5 +111,7 @@
 <!-- 🔥 JS -->
 <script src="js/script.js"></script>
 
+<?php include 'components/modal-systeme.php'; ?>
+
 </body>
 </html>
